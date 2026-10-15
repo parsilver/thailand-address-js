@@ -70,6 +70,7 @@ const th = {
   errMismatch: "รหัสไปรษณีย์นี้ไม่ตรงกับตำบล/แขวงที่เลือก",
   errRequired: "กรุณาเลือก{f}",
   errRequiredPostal: "กรุณากรอกรหัสไปรษณีย์",
+  errChecking: "กำลังตรวจรหัสไปรษณีย์ ลองส่งอีกครั้งในอีกครู่",
   showFacility: "แสดงรหัสไปรษณีย์ของหน่วยงาน",
   // Live-region announcements.
   liveFilled: "เติมที่อยู่แล้ว: {addr}",
@@ -148,6 +149,7 @@ const en: Record<CopyKey, string> = {
   errMismatch: "This postal code doesn't serve the selected subdistrict",
   errRequired: "Select a {f}",
   errRequiredPostal: "Enter a postal code",
+  errChecking: "Still checking the postal code. Submit again in a moment.",
   showFacility: "Show facility postal codes",
   liveFilled: "Address filled: {addr}",
   liveNarrowed: "{pc} covers {n} subdistricts in {d}",

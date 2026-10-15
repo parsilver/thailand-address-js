@@ -33,24 +33,19 @@ import {
   FieldSet,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 
 import { getThaiAddressClient } from "./address-form-client"
 import {
-  createTranslator,
-  type CopyKey,
-  type Locale,
-} from "./address-form-copy"
+  AreaChoice,
+  choiceDescription,
+  facilityNote,
+} from "./address-form-parts"
+import { initialPostalState, postalReducer } from "./address-form-state"
+import { createTranslator, type Locale } from "./address-form-copy"
 import { AddressPicker, type PickerOption } from "./address-picker"
 import { AddressSearch } from "./address-search"
-import {
-  areaContext,
-  joinList,
-  levelKinds,
-  nameIn,
-  sortByName,
-} from "./address-form-shared"
+import { joinList, levelKinds, nameIn, sortByName } from "./address-form-shared"
 
 export type { AddressValue, Locale }
 
@@ -90,13 +85,6 @@ const EMPTY: AddressValue = {
 }
 
 type Field = keyof AddressValue
-type LookupState = {
-  pc: string
-  facility: boolean
-  status: "loading" | "done" | "error"
-  result?: PostalLookup
-  error?: unknown
-}
 type FieldErrors = Partial<Record<Field, string>>
 
 /** A value that follows a promise-returning call, re-run when its key changes. */
@@ -180,13 +168,32 @@ export function AddressForm({
     [valueProp, onChange]
   )
 
-  // What the postal input shows. It can differ from value.postal_code: four
-  // typed digits are not a code yet, and a hidden facility code is not output.
-  const [postalInput, setPostalInput] = React.useState(value.postal_code ?? "")
+  // Everything the postal code implied for the fields below (see address-form-state.ts).
+  const [postal, dispatch] = React.useReducer(
+    postalReducer,
+    value.postal_code ?? "",
+    initialPostalState
+  )
+  const {
+    input: postalInput,
+    lookup,
+    autofilledFrom,
+    narrowed,
+    choice,
+  } = postal
+  const result: PostalLookup | undefined =
+    lookup?.status === "done" ? lookup.result : undefined
+  const lookupSeq = React.useRef(0)
+  const reconcileSeq = React.useRef(0)
+
   React.useEffect(() => {
-    // A value from outside (same-as, search, the host) wins over the input.
-    if (value.postal_code !== lastEmitted.current.postal_code)
-      setPostalInput(value.postal_code ?? "")
+    // A value from outside (same-as, the host, a reset) is shown as given,
+    // and nothing the last lookup implied survives it.
+    if (!sameValue(value, lastEmitted.current)) {
+      lookupSeq.current++
+      reconcileSeq.current++
+      dispatch({ type: "reset", input: value.postal_code ?? "" })
+    }
     lastEmitted.current = value
   }, [value])
 
@@ -195,17 +202,6 @@ export function AddressForm({
   )
   const [live, setLive] = React.useState("")
   const [submitted, setSubmitted] = React.useState(false)
-
-  // The last postal lookup, and what it implied for the fields below.
-  const [lookup, setLookup] = React.useState<LookupState | null>(null)
-  const lookupSeq = React.useRef(0)
-  const result: PostalLookup | undefined =
-    lookup?.status === "done" ? lookup.result : undefined
-  const [autofilledFrom, setAutofilledFrom] = React.useState<string | null>(
-    null
-  )
-  const [narrowed, setNarrowed] = React.useState<Area[] | null>(null)
-  const [choice, setChoice] = React.useState<Area[] | null>(null)
 
   // Lists for the three pickers, and the codes that serve the subdistrict.
   // A value from the host needs names to show, so it loads the lists too.
@@ -266,7 +262,6 @@ export function AddressForm({
       if (result.shape === "single") {
         const a = areas[0]!
         emit(codesOf(a, result.postal_code))
-        setAutofilledFrom(result.postal_code)
         setLive(
           t("liveFilled", {
             addr: formatAddress(a, locale, result.postal_code),
@@ -283,8 +278,6 @@ export function AddressForm({
           subdistrict_code: keep ? current.subdistrict_code : null,
           postal_code: result.postal_code,
         })
-        setNarrowed(areas)
-        setAutofilledFrom(result.postal_code)
         const k = levelKinds(a.province, a.district, a.subdistrict)
         setLive(
           t(
@@ -306,7 +299,6 @@ export function AddressForm({
             ? codesOf(keep, result.postal_code)
             : { ...EMPTY, postal_code: result.postal_code }
         )
-        setChoice(areas)
         setLive(choiceDescription(result, t))
       }
     } else if (result.status === "facility") {
@@ -319,29 +311,30 @@ export function AddressForm({
 
   const runLookup = (pc: string, facility: boolean) => {
     const n = ++lookupSeq.current
-    setLookup({ pc, facility, status: "loading" })
+    dispatch({ type: "lookup_start", pc, facility })
     client.lookupPostalCode(pc, { includeFacility: facility }).then(
       (r) => {
         if (n !== lookupSeq.current) return
-        setLookup({ pc, facility, status: "done", result: r })
+        dispatch({ type: "lookup_done", pc, facility, result: r })
         applyLookup(r)
       },
       (error: unknown) => {
         if (n !== lookupSeq.current) return
-        setLookup({ pc, facility, status: "error", error })
+        dispatch({ type: "lookup_error", pc, facility, error })
       }
     )
   }
 
-  const cancelLookup = () => {
+  /** Drop a lookup still in flight, so it cannot land on top of a hand pick. */
+  const cancelPendingLookup = () => {
+    if (lookup?.status !== "loading") return
     lookupSeq.current++
-    setLookup(null)
+    dispatch({ type: "lookup_cancel" })
   }
 
   // A hand-picked subdistrict: keep the postal code only if it serves the
   // area; otherwise switch to the area's only code, or clear it.
   // Only a change made here counts: a value from the host is shown as given.
-  const reconcileSeq = React.useRef(0)
   const reconcilePostal = (code: string) => {
     const n = ++reconcileSeq.current
     const typedUnknown =
@@ -375,30 +368,23 @@ export function AddressForm({
     if (usable.length === 1) {
       const only = usable[0]!.postal_code
       emit({ ...current, postal_code: only })
-      setPostalInput(only)
+      dispatch({ type: "set_input", input: only })
       if (pc) setLive(t("livePostalSwitched", { pc: only }))
     } else if (pc) {
       emit({ ...current, postal_code: null })
-      setPostalInput("")
+      dispatch({ type: "set_input", input: "" })
       setLive(t("livePostalCleared"))
     }
   }
 
   // ---- Handlers -------------------------------------------------------------
 
-  const resetPostalContext = () => {
-    setAutofilledFrom(null)
-    setNarrowed(null)
-    setChoice(null)
-  }
-
   const onPostalInput = (raw: string) => {
     const pc = normalizePostalInput(raw)
     if (pc === postalInput) return
-    setPostalInput(pc)
-    resetPostalContext()
+    lookupSeq.current++
+    dispatch({ type: "typed", input: pc })
     if (pc.length < 5) {
-      cancelLookup()
       emit({ ...lastEmitted.current, postal_code: null })
       return
     }
@@ -412,11 +398,15 @@ export function AddressForm({
     runLookup(lookup.pc, true)
   }
 
-  const clearAll = () => {
+  const resetAll = () => {
+    lookupSeq.current++
+    reconcileSeq.current++
     emit(EMPTY)
-    setPostalInput("")
-    cancelLookup()
-    resetPostalContext()
+    dispatch({ type: "reset", input: "" })
+  }
+
+  const clearAll = () => {
+    resetAll()
     setLive(t("liveCleared"))
   }
 
@@ -449,13 +439,13 @@ export function AddressForm({
         ...(keepPostal ? [] : (["postal_code"] as const)),
       ] as Field[]
     ).filter((f) => value[f] !== null)
-    setNarrowed(null)
-    setChoice(null)
-    setAutofilledFrom(null)
-    if (!keepPostal) {
-      cancelLookup()
-      setPostalInput("")
-    }
+    if (!keepPostal) lookupSeq.current++
+    dispatch({
+      type: "area_picked",
+      level: "province",
+      code,
+      keepTyped: keepPostal,
+    })
     emit({
       province_code: code,
       district_code: null,
@@ -474,13 +464,13 @@ export function AddressForm({
         ...(keepPostal ? [] : (["postal_code"] as const)),
       ] as Field[]
     ).filter((f) => value[f] !== null)
-    if (narrowed && !narrowed.some((a) => a.district.code === code))
-      setNarrowed(null)
-    setAutofilledFrom(null)
-    if (!keepPostal) {
-      cancelLookup()
-      setPostalInput("")
-    }
+    if (!keepPostal) lookupSeq.current++
+    dispatch({
+      type: "area_picked",
+      level: "district",
+      code,
+      keepTyped: keepPostal,
+    })
     emit({
       ...value,
       district_code: code,
@@ -492,7 +482,8 @@ export function AddressForm({
 
   const onSubdistrict = (code: string) => {
     if (code === value.subdistrict_code) return
-    setAutofilledFrom(null)
+    if (lookup?.status === "loading") lookupSeq.current++
+    dispatch({ type: "subdistrict_picked" })
     emit({ ...value, subdistrict_code: code })
     reconcilePostal(code)
   }
@@ -500,6 +491,7 @@ export function AddressForm({
   const onChoice = (code: string) => {
     const a = choice?.find((x) => x.subdistrict.code === code)
     if (!a) return
+    cancelPendingLookup()
     emit(codesOf(a, value.postal_code))
     setLive(
       t("liveFilled", { addr: formatAddress(a, locale, value.postal_code) })
@@ -508,18 +500,21 @@ export function AddressForm({
 
   const onPostalOption = (pc: string) => {
     if (!pc) return
+    cancelPendingLookup()
     emit({ ...value, postal_code: pc })
-    setPostalInput(pc)
+    dispatch({ type: "set_input", input: pc })
   }
 
   // A hit fills as many levels as it has: a province hit sets the province
   // and leaves the rest to pick.
   const onSearchPick = (hit: SearchHit, line: string) => {
-    resetPostalContext()
-    cancelLookup()
+    lookupSeq.current++
+    dispatch({
+      type: "reset",
+      input: hit.level === "subdistrict" ? (hit.postal_code ?? "") : "",
+    })
     if (hit.level === "subdistrict") {
       emit(codesOf(hit, hit.postal_code))
-      setPostalInput(hit.postal_code ?? "")
       setLive(
         t("liveFilled", { addr: formatAddress(hit, locale, hit.postal_code) })
       )
@@ -531,12 +526,12 @@ export function AddressForm({
       subdistrict_code: null,
       postal_code: null,
     })
-    setPostalInput("")
     setLive(t("liveFilled", { addr: line }))
   }
 
   // ---- Validation on submit -------------------------------------------------
 
+  const servingLoading = servingQ.loading
   const mismatch =
     Boolean(value.postal_code && value.subdistrict_code && serving) &&
     !serving!.some((p) => p.postal_code === value.postal_code)
@@ -556,12 +551,17 @@ export function AddressForm({
     if (!value.postal_code && !noCodeKnown)
       e.postal_code = t("errRequiredPostal")
     else if (mismatch) e.postal_code = t("errMismatch")
+    // The codes that serve the subdistrict are still loading, so a mismatch
+    // cannot be ruled out yet: hold the submit rather than let it through.
+    else if (value.postal_code && value.subdistrict_code && servingLoading)
+      e.postal_code = t("errChecking")
     return e
   }, [
     value,
     postalInput,
     required,
     serving,
+    servingLoading,
     mismatch,
     labels.province,
     labels.district,
@@ -571,9 +571,12 @@ export function AddressForm({
   const shown: FieldErrors = submitted ? errors : {}
 
   const fieldsetRef = React.useRef<HTMLFieldSetElement>(null)
-  // Capture phase on the form runs before React's own onSubmit, so an
-  // invalid address stops a plain form and a react-hook-form handler alike.
+  // The listener sits on the document in the capture phase, which runs before
+  // the form's own listeners and React's onSubmit, so an invalid address stops
+  // a plain form and a react-hook-form handler alike. stopPropagation also
+  // stops any other submit listener on the page for that submit.
   const onFormSubmit = React.useEffectEvent((event: SubmitEvent) => {
+    if (event.target !== fieldsetRef.current?.form) return
     setSubmitted(true)
     if (Object.keys(errors).length === 0) return
     event.preventDefault()
@@ -584,17 +587,26 @@ export function AddressForm({
       ["district_code", ids.district],
       ["subdistrict_code", ids.subdistrict],
     ]
-    const first = order.find(
-      ([f, elId]) => errors[f] && document.getElementById(elId)
-    )
-    if (first) document.getElementById(first[1])?.focus()
+    const first = order
+      .filter(([f]) => errors[f])
+      .map(([, elId]) => document.getElementById(elId))
+      .find((el): el is HTMLElement => el !== null)
+    if (first) focusFirstInvalid(event, first)
+  })
+  const onFormReset = React.useEffectEvent((event: Event) => {
+    if (event.target !== fieldsetRef.current?.form) return
+    setSubmitted(false)
+    resetAll()
   })
   React.useEffect(() => {
-    const form = fieldsetRef.current?.form
-    if (!form) return
-    const listener = (event: SubmitEvent) => onFormSubmit(event)
-    form.addEventListener("submit", listener, true)
-    return () => form.removeEventListener("submit", listener, true)
+    const submit = (event: SubmitEvent) => onFormSubmit(event)
+    const reset = (event: Event) => onFormReset(event)
+    document.addEventListener("submit", submit, true)
+    document.addEventListener("reset", reset, true)
+    return () => {
+      document.removeEventListener("submit", submit, true)
+      document.removeEventListener("reset", reset, true)
+    }
   }, [])
 
   // ---- Options --------------------------------------------------------------
@@ -1029,6 +1041,32 @@ export function AddressForm({
   )
 }
 
+// Several address forms can share one <form> (shipping and tax invoice).
+// Each reports its first invalid field for a submit; once they all have,
+// focus goes to the earliest one on the page.
+const invalidBySubmit = new WeakMap<Event, HTMLElement[]>()
+function focusFirstInvalid(event: Event, el: HTMLElement) {
+  const list = invalidBySubmit.get(event)
+  if (list) {
+    list.push(el)
+    return
+  }
+  invalidBySubmit.set(event, [el])
+  queueMicrotask(() => {
+    const all = invalidBySubmit.get(event) ?? []
+    all.sort((a, b) =>
+      a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1
+    )
+    all[0]?.focus()
+  })
+}
+
+const sameValue = (a: AddressValue, b: AddressValue) =>
+  a.province_code === b.province_code &&
+  a.district_code === b.district_code &&
+  a.subdistrict_code === b.subdistrict_code &&
+  a.postal_code === b.postal_code
+
 function codesOf(a: Area, postal: string | null): AddressValue {
   return {
     province_code: a.province.code,
@@ -1036,125 +1074,6 @@ function codesOf(a: Area, postal: string | null): AddressValue {
     subdistrict_code: a.subdistrict.code,
     postal_code: postal,
   }
-}
-
-function choiceDescription(
-  result: Extract<PostalLookup, { status: "found" }>,
-  t: (k: CopyKey, v?: Record<string, string | number>) => string
-) {
-  return result.province_count > 1
-    ? t("pickArea", {
-        pc: result.postal_code,
-        n: result.areas.length,
-        p: result.province_count,
-      })
-    : t("pickAreaOneProvince", {
-        pc: result.postal_code,
-        n: result.areas.length,
-        d: result.district_count,
-      })
-}
-
-function facilityNote(
-  result: Extract<PostalLookup, { status: "facility" }>,
-  locale: Locale
-): string | null {
-  const note = result.facilities[0]?.note
-  if (!note) return null
-  return note[locale] ?? note.th ?? note.en ?? null
-}
-
-/** The combined "subdistrict › district › province" choice: radios up to 6, a searchable picker above. */
-function AreaChoice({
-  id,
-  areas,
-  value,
-  onChange,
-  description,
-  heading,
-  locale,
-  t,
-  disabled,
-}: {
-  id: string
-  areas: Area[]
-  value: string | null
-  onChange: (code: string) => void
-  description: string
-  heading: string
-  locale: Locale
-  t: (k: CopyKey, v?: Record<string, string | number>) => string
-  disabled: boolean
-}) {
-  if (areas.length <= 6) {
-    return (
-      <Field>
-        <FieldLabel id={`${id}-label`}>{description}</FieldLabel>
-        <RadioGroup
-          aria-labelledby={`${id}-label`}
-          value={value ?? ""}
-          onValueChange={onChange}
-          disabled={disabled}
-          className="gap-2"
-        >
-          {areas.map((a) => (
-            <FieldLabel
-              key={a.subdistrict.code}
-              htmlFor={`${id}-${a.subdistrict.code}`}
-            >
-              <Field orientation="horizontal">
-                <RadioGroupItem
-                  value={a.subdistrict.code}
-                  id={`${id}-${a.subdistrict.code}`}
-                  aria-labelledby={`${id}-${a.subdistrict.code}-name`}
-                  aria-describedby={`${id}-${a.subdistrict.code}-context`}
-                />
-                <span className="flex flex-col gap-0.5">
-                  <span id={`${id}-${a.subdistrict.code}-name`}>
-                    {nameIn(a.subdistrict.name, locale)}
-                  </span>
-                  <span
-                    id={`${id}-${a.subdistrict.code}-context`}
-                    className="text-sm font-normal text-muted-foreground"
-                  >
-                    {areaContext(a, locale)}
-                  </span>
-                </span>
-              </Field>
-            </FieldLabel>
-          ))}
-        </RadioGroup>
-      </Field>
-    )
-  }
-  return (
-    <Field>
-      <FieldLabel htmlFor={id}>{heading}</FieldLabel>
-      <AddressPicker
-        id={id}
-        label={heading}
-        options={areas.map((a) => ({
-          value: a.subdistrict.code,
-          label: nameIn(a.subdistrict.name, locale),
-          description: areaContext(a, locale),
-          keywords: [
-            a.subdistrict.name.th,
-            a.subdistrict.name.en ?? "",
-            a.district.name.th,
-            a.province.name.th,
-          ],
-        }))}
-        value={value}
-        onValueChange={onChange}
-        placeholder={t("pick", { k: t("subdistrict") })}
-        searchPlaceholder={t("searchHere", { k: t("subdistrict") })}
-        emptyText={t("noOptions")}
-        disabled={disabled}
-        describedBy={`${id}-desc`}
-      />
-      <FieldDescription id={`${id}-desc`}>{description}</FieldDescription>
-    </Field>
-  )
 }
 
 export type { District, Province, Subdistrict }

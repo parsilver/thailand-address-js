@@ -92,15 +92,23 @@ describe("single search box", () => {
 
   it("lists at most 8, with a hint when there are more", async () => {
     const { user } = renderForm({ mode: "search" })
-    await user.type(screen.getByRole("combobox", { name: "ค้นหาที่อยู่" }), "บาง")
+    await user.type(
+      screen.getByRole("combobox", { name: "ค้นหาที่อยู่" }),
+      "บาง"
+    )
     await waitFor(() => expect(screen.getAllByRole("option")).toHaveLength(8))
     expect(screen.getByText("พิมพ์เพิ่มเพื่อให้ผลแคบลง")).toBeInTheDocument()
   })
 
   it("“บางรัก”: the exact khwaeng first, one row per postal code, then khet Bang Rak", async () => {
     const { user } = renderForm({ mode: "search" })
-    await user.type(screen.getByRole("combobox", { name: "ค้นหาที่อยู่" }), "บางรัก")
-    await waitFor(() => expect(screen.getAllByRole("option").length).toBeGreaterThan(3))
+    await user.type(
+      screen.getByRole("combobox", { name: "ค้นหาที่อยู่" }),
+      "บางรัก"
+    )
+    await waitFor(() =>
+      expect(screen.getAllByRole("option").length).toBeGreaterThan(3)
+    )
     const rows = screen.getAllByRole("option").map((o) => o.textContent)
     expect(rows.slice(0, 4)).toEqual([
       "แขวงบางรัก เขตบางรัก กรุงเทพมหานคร10500",
@@ -112,17 +120,34 @@ describe("single search box", () => {
 
   it("a province result fills the province only, and the district picker opens up", async () => {
     const { user, value } = renderForm({ mode: "search" })
-    await user.type(screen.getByRole("combobox", { name: "ค้นหาที่อยู่" }), "ภูเก็ต")
+    await user.type(
+      screen.getByRole("combobox", { name: "ค้นหาที่อยู่" }),
+      "ภูเก็ต"
+    )
     const option = await screen.findByRole("option", { name: "จังหวัดภูเก็ต" })
     await user.click(option)
-    await waitFor(() => expect(value()).toEqual({ province_code: "83", district_code: null, subdistrict_code: null, postal_code: null }))
+    await waitFor(() =>
+      expect(value()).toEqual({
+        province_code: "83",
+        district_code: null,
+        subdistrict_code: null,
+        postal_code: null,
+      })
+    )
     expect(screen.getByRole("combobox", { name: "อำเภอ" })).toBeEnabled()
   })
 
   it("“bang rak” typed as written finds แขวงบางรัก first", async () => {
     const { user } = renderForm({ mode: "search" })
-    await user.type(screen.getByRole("combobox", { name: "ค้นหาที่อยู่" }), "bang rak")
-    await waitFor(() => expect(screen.getAllByRole("option")[0]).toHaveTextContent("แขวงบางรัก เขตบางรัก กรุงเทพมหานคร10500"))
+    await user.type(
+      screen.getByRole("combobox", { name: "ค้นหาที่อยู่" }),
+      "bang rak"
+    )
+    await waitFor(() =>
+      expect(screen.getAllByRole("option")[0]).toHaveTextContent(
+        "แขวงบางรัก เขตบางรัก กรุงเทพมหานคร10500"
+      )
+    )
   })
 
   it("with no match, says so and “กรอกเอง” moves focus to the province", async () => {

@@ -32,6 +32,16 @@
           "target": "components/address-form/address-form.tsx"
         },
         {
+          "path": "src/registry/address-form/address-form-state.ts",
+          "type": "registry:component",
+          "target": "components/address-form/address-form-state.ts"
+        },
+        {
+          "path": "src/registry/address-form/address-form-parts.tsx",
+          "type": "registry:component",
+          "target": "components/address-form/address-form-parts.tsx"
+        },
+        {
           "path": "src/registry/address-form/address-same-as.tsx",
           "type": "registry:component",
           "target": "components/address-form/address-same-as.tsx"
