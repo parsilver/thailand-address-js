@@ -12,7 +12,8 @@ type Row = [name: string, type: string, def: string, th: string, en: string]
 
 /**
  * Props in three columns, the default under the description. Row rules
- * only. Under 768px each row stacks into a block; the explicit roles keep
+ * only. Under 768px each row stacks into a block and the header row is
+ * visually hidden but still read; the explicit roles keep
  * it a table for screen readers once display is no longer table.
  */
 function PropsTable({ rows, caption }: { rows: Row[]; caption: string }) {
@@ -21,7 +22,7 @@ function PropsTable({ rows, caption }: { rows: Row[]; caption: string }) {
   return (
     <table role="table" className="w-full text-left text-sm max-md:block">
       <caption className="sr-only">{caption}</caption>
-      <thead role="rowgroup" className="max-md:hidden">
+      <thead role="rowgroup" className="max-md:sr-only">
         <tr role="row">
           {[
             t("พร็อพ", "Prop"),
