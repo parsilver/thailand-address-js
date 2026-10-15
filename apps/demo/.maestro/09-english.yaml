@@ -3,14 +3,16 @@ url: ${BASE}
 name: english
 ---
 - openLink: ${BASE}/examples/postal-first
-- tapOn: "English"
-- extendedWaitUntil: { visible: "Postal code", timeout: 20000 }
+- scrollUntilVisible: { element: "พิมพ์ 5 หลัก ระบบจะเติมที่อยู่ให้", timeout: 20000, centerElement: true }
+- tapOn: "EN"
+- scrollUntilVisible: { element: "Postal code", timeout: 20000, centerElement: true }
 - tapOn: "e.g. 10200"
 - inputText: "10200"
 - scrollUntilVisible: { element: "District \\(khet\\)", timeout: 15000 }
 - scrollUntilVisible: { element: "Bangkok", timeout: 10000 }
 - takeScreenshot: 09-english-10200
 - openLink: ${BASE}/examples/postal-first
+- scrollUntilVisible: { element: "Type 5 digits and we fill in the rest", timeout: 20000, centerElement: true }
 - tapOn: "ไทย"
 - tapOn: "เช่น 10200"
 - inputText: "10200"

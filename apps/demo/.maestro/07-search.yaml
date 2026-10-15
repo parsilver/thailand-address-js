@@ -3,7 +3,7 @@ url: ${BASE}
 name: search
 ---
 - openLink: ${BASE}/examples/search
-- extendedWaitUntil: { visible: "พิมพ์ไทยหรืออังกฤษก็ได้ ไม่ต้องพิมพ์ ต./อ./จ.", timeout: 20000 }
+- scrollUntilVisible: { element: "พิมพ์ไทยหรืออังกฤษก็ได้ ไม่ต้องพิมพ์ ต./อ./จ.", timeout: 20000, centerElement: true }
 - tapOn: "ค้นหาที่อยู่"
 - inputText: "บางรัก"
 - extendedWaitUntil: { visible: "10501", timeout: 10000 }

@@ -21,7 +21,7 @@ The flows read the live dataset on data.farzai.com, so a network connection is n
 | `05-postal-99999` | Unknown code, then an area picked: the postal code is flagged with a fix |
 | `06-area-first` | Area first: disabled levels, a choice of two codes, a province change clears below |
 | `07-search` | Single search box: Thai, English with spaces, no match |
-| `08-multiple` | Tax invoice address mirrors shipping; unticking copies it |
+| `08-multiple` | Tax invoice address mirrors shipping; unticking copies it; re-ticking after an edit asks first |
 | `09-english` | Bangkok labels follow `kind` in Thai and English |
 
 ## Notes

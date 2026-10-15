@@ -3,7 +3,7 @@ url: ${BASE}
 name: multiple
 ---
 - openLink: ${BASE}/examples/multiple
-- extendedWaitUntil: { visible: "พิมพ์ 5 หลัก ระบบจะเติมที่อยู่ให้", timeout: 20000 }
+- scrollUntilVisible: { element: "พิมพ์ 5 หลัก ระบบจะเติมที่อยู่ให้", timeout: 20000, centerElement: true }
 - tapOn: "เช่น 10200"
 - inputText: "83100"
 - scrollUntilVisible: { element: '.*"tax": \{\s*"province_code": "83",\s*"district_code": "8301",\s*"subdistrict_code": "830108",\s*"postal_code": "83100".*', timeout: 15000 }
@@ -11,4 +11,19 @@ name: multiple
 - scrollUntilVisible: { element: "ใช้ที่อยู่เดียวกับที่อยู่จัดส่ง", timeout: 10000 }
 - tapOn: "ใช้ที่อยู่เดียวกับที่อยู่จัดส่ง"
 - scrollUntilVisible: { element: "ที่อยู่ใบกำกับภาษี", timeout: 5000 }
+# Unticking copies shipping in, ready to edit: the tax form and payload still hold its codes.
+- assertVisible: { id: "demo-tax-postal", text: "83100" }
+- scrollUntilVisible: { element: '.*"tax": \{\s*"province_code": "83",\s*"district_code": "8301",\s*"subdistrict_code": "830108",\s*"postal_code": "83100".*', timeout: 10000 }
 - takeScreenshot: 08-multiple-unticked
+# Edit the copy, then re-tick: the form asks before replacing the edits.
+- tapOn: { id: "demo-tax-postal" }
+- eraseText: 10
+- inputText: "10200"
+- scrollUntilVisible: { element: '.*"tax": \{\s*"province_code": "10",\s*"district_code": "1001",\s*"subdistrict_code": null,\s*"postal_code": "10200".*', timeout: 15000 }
+- scrollUntilVisible: { direction: UP, element: "ใช้ที่อยู่เดียวกับที่อยู่จัดส่ง", timeout: 10000 }
+- tapOn: "ใช้ที่อยู่เดียวกับที่อยู่จัดส่ง"
+- extendedWaitUntil: { visible: "ใช้ที่อยู่จัดส่งแทนที่อยู่ที่แก้ไว้ใช่ไหม", timeout: 5000 }
+- takeScreenshot: 08-multiple-retick-confirm
+- tapOn: "ใช้ที่อยู่จัดส่ง"
+- scrollUntilVisible: { element: '.*"tax": \{\s*"province_code": "83",\s*"district_code": "8301",\s*"subdistrict_code": "830108",\s*"postal_code": "83100".*', timeout: 10000 }
+- takeScreenshot: 08-multiple-retick

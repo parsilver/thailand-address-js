@@ -3,7 +3,7 @@ url: ${BASE}
 name: postal-10001
 ---
 - openLink: ${BASE}/examples/facility-unknown
-- extendedWaitUntil: { visible: "พิมพ์ 5 หลัก ระบบจะเติมที่อยู่ให้", timeout: 20000 }
+- scrollUntilVisible: { element: "พิมพ์ 5 หลัก ระบบจะเติมที่อยู่ให้", timeout: 20000, centerElement: true }
 - tapOn: "เช่น 10200"
 - inputText: "10001"
 - extendedWaitUntil: { visible: "10001 เป็นรหัสไปรษณีย์ของหน่วยงาน", timeout: 15000 }
