@@ -4,3 +4,4 @@ coverage/
 .wrangler/
 *.tsbuildinfo
 .DS_Store
+pkg/

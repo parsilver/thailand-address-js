@@ -33,12 +33,12 @@ jobs:
       - run: pnpm build
       - name: Package is publishable
         run: pnpm --filter @farzai/thailand-address exec publint
-      # The release's own pack step, then a publish dry run of that tarball:
-      # nothing is published and no token is used.
-      - name: Release pack works (dry run)
+      # The release's own pack and publish scripts, with the publish job's pkg/
+      # layout, as a dry run: nothing is published and no token is used.
+      - name: Release pack and publish work (dry run)
         run: |
-          tgz="$(bash scripts/pack-core.sh "$RUNNER_TEMP/pkg")"
-          npm publish "$tgz" --dry-run --access public
+          bash scripts/pack-core.sh pkg
+          bash scripts/publish-core.sh pkg --dry-run
       - name: Demo deploy config is valid (dry run, no credentials)
         run: pnpm --filter @thailand-address/demo exec wrangler deploy --dry-run
       - name: Built registry matches its source
