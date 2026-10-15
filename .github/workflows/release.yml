@@ -46,9 +46,9 @@ jobs:
       - run: pnpm --filter @farzai/thailand-address check:types-generated
       - run: pnpm --filter @farzai/thailand-address test
       - run: pnpm --filter @farzai/thailand-address build
+      # The same script ci.yml runs on every PR, so this step is never untested.
       - name: Pack
-        working-directory: packages/core
-        run: npm pack --pack-destination "$RUNNER_TEMP/pkg"
+        run: bash scripts/pack-core.sh "$RUNNER_TEMP/pkg"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: package
