@@ -1,0 +1,26 @@
+# Single search box: บางรัก lists both แขวงบางรัก codes and Trang; karon picks กะรน; "bang rak" works with a space; zzzz offers manual entry.
+url: ${BASE}
+name: search
+---
+- openLink: ${BASE}/examples/search
+- extendedWaitUntil: { visible: "พิมพ์ไทยหรืออังกฤษก็ได้ ไม่ต้องพิมพ์ ต./อ./จ.", timeout: 20000 }
+- tapOn: "ค้นหาที่อยู่"
+- inputText: "บางรัก"
+- extendedWaitUntil: { visible: "10501", timeout: 10000 }
+- assertVisible: "92000"
+- takeScreenshot: 07-search-bangrak
+- eraseText: 20
+- inputText: "karon"
+- extendedWaitUntil: { visible: "83100", timeout: 10000 }
+- tapOn: "83100"
+- scrollUntilVisible: { element: '.*"subdistrict_code": "830108",\s*"postal_code": "83100".*', timeout: 10000 }
+- takeScreenshot: 07-search-karon
+- tapOn: "ค้นหาที่อยู่"
+- eraseText: 40
+- inputText: "bang rak"
+- extendedWaitUntil: { visible: "10501", timeout: 10000 }
+- eraseText: 40
+- inputText: "zzzz"
+- extendedWaitUntil: { visible: "กรอกเอง", timeout: 10000 }
+- takeScreenshot: 07-search-none
+- tapOn: "กรอกเอง"

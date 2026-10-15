@@ -1,0 +1,16 @@
+# Facility code: hidden by default, named from the dataset note, values stay null; "use this code" keeps it.
+url: ${BASE}
+name: postal-10001
+---
+- openLink: ${BASE}/examples/facility-unknown
+- extendedWaitUntil: { visible: "พิมพ์ 5 หลัก ระบบจะเติมที่อยู่ให้", timeout: 20000 }
+- tapOn: "เช่น 10200"
+- inputText: "10001"
+- extendedWaitUntil: { visible: "10001 เป็นรหัสไปรษณีย์ของหน่วยงาน", timeout: 15000 }
+- scrollUntilVisible: { element: ".*ศูนย์ไปรษณีย์สุวรรณภูมิ.*", timeout: 10000 }
+- scrollUntilVisible: { element: "ใช้รหัสนี้ต่อ", timeout: 10000 }
+- scrollUntilVisible: { element: '.*"shipping": \{\s*"province_code": null,\s*"district_code": null,\s*"subdistrict_code": null.*', timeout: 15000 }
+- takeScreenshot: 04-postal-10001
+- tapOn: "ใช้รหัสนี้ต่อ"
+- scrollUntilVisible: { element: '.*"province_code": "11".*"district_code": "1103".*"subdistrict_code": "110308".*"postal_code": "10001".*', timeout: 10000 }
+- takeScreenshot: 04-postal-10001-use

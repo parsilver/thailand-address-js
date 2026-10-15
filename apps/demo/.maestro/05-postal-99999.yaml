@@ -1,0 +1,27 @@
+# Unknown code: informational alert, manual selection open; then กะรน marks the code invalid with a fix.
+url: ${BASE}
+name: postal-99999
+---
+- openLink: ${BASE}/examples/facility-unknown
+- extendedWaitUntil: { visible: "พิมพ์ 5 หลัก ระบบจะเติมที่อยู่ให้", timeout: 20000 }
+- tapOn: "เช่น 10200"
+- inputText: "99999"
+- extendedWaitUntil: { visible: "ไม่พบรหัสไปรษณีย์ 99999", timeout: 15000 }
+- takeScreenshot: 05-postal-99999
+- scrollUntilVisible: { element: "เลือกจังหวัด", timeout: 10000 }
+- tapOn: "เลือกจังหวัด"
+- inputText: "ภูเก็ต"
+- pressKey: Enter
+- scrollUntilVisible: { element: "เลือกอำเภอ", timeout: 10000 }
+- tapOn: "เลือกอำเภอ"
+- inputText: "เมืองภูเก็ต"
+- pressKey: Enter
+- scrollUntilVisible: { element: "เลือกตำบล", timeout: 10000 }
+- tapOn: "เลือกตำบล"
+- inputText: "กะรน"
+- pressKey: Enter
+- extendedWaitUntil: { visible: ".*ตำบลกะรนใช้รหัส 83100.*", timeout: 10000 }
+- assertVisible: "ใช้ 83100"
+- takeScreenshot: 05-postal-99999-fix
+- tapOn: "ใช้ 83100"
+- scrollUntilVisible: { element: '.*"subdistrict_code": "830108",\s*"postal_code": "83100".*', timeout: 10000 }
