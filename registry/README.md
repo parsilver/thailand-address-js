@@ -1,6 +1,6 @@
 # address-form (shadcn/ui registry item)
 
-A Thai address as four codes: `province_code`, `district_code`, `subdistrict_code` and `postal_code`. The user types the postal code and the rest fills in. Every case in [issue #1](https://github.com/parsilver/thailand-address-js/issues/1) and the [design brief](../docs/design/brief.md) is covered.
+A Thai address as four codes: `province_code`, `district_code`, `subdistrict_code` and `postal_code`. The user types the postal code and the rest fills in. Every case in [issue #1](https://github.com/parsilver/thailand-address-js/issues/1) and its design brief is covered.
 
 ```sh
 npx shadcn@latest add https://thailand-address-demo.farzai.com/r/address-form.json

@@ -1,5 +1,5 @@
 // Interface copy for <AddressForm>, Thai and English, from the design brief
-// (docs/design/copy.md). Placeholders: {pc} postal code, {n} a count, {k} the
+// on issue #1. Placeholders: {pc} postal code, {n} a count, {k} the
 // level label for the current kind, {p} provinces, {d} districts, {note} the
 // dataset note, {s} the search text, {f} a field label, {addr} an address.
 
