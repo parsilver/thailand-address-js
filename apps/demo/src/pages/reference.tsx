@@ -314,6 +314,21 @@ export function LaravelPage() {
         <CodeBlock label="PHP" code={RULE_OBJECTS} />
       </Section>
       <Section
+        title={t(
+          "ตำบลที่ไม่มีรหัสไปรษณีย์",
+          "Subdistricts with no postal code"
+        )}
+      >
+        <Prose>
+          <p>
+            {t(
+              "ราว 50 ตำบลในชุดข้อมูลยังไม่มีรหัสไปรษณีย์ที่ทราบ ฟอร์มยอมให้รหัสไปรษณีย์ว่างได้สำหรับตำบลเหล่านี้ แต่กฎด้านบนใช้ required กับ postal_code จึงจะปฏิเสธที่อยู่นั้น ถ้าต้องการรับที่อยู่แบบนี้ ให้เปลี่ยน required เป็น nullable สำหรับ postal_code แล้วตรวจเองว่าตำบลนั้นไม่มีรหัสจริง",
+              "About 50 subdistricts in the dataset have no known postal code. The form accepts an empty postal code for them, but the rules above put required on postal_code, so the server rejects that address. To accept it, use nullable instead of required for postal_code, and check yourself that the subdistrict really has no code."
+            )}
+          </p>
+        </Prose>
+      </Section>
+      <Section
         title={t("ข้อความของฟอร์มกับกฎ", "The form's messages and the rules")}
       >
         <Prose>

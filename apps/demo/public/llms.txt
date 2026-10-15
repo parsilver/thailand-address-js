@@ -52,3 +52,5 @@ The package pins one dataset snapshot and never reads latest.json. Never guess a
     'shipping.district_code'    => 'required|thai_district:shipping.province_code',
     'shipping.subdistrict_code' => 'required|thai_subdistrict:shipping.district_code',
     'shipping.postal_code'      => 'required|thai_postal_code:shipping.subdistrict_code',
+
+About 50 subdistricts have no known postal code. The form allows an empty postal code for them, and `required` above rejects it. Use `nullable` for postal_code if you accept those addresses.

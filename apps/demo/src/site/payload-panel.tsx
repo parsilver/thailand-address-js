@@ -48,6 +48,10 @@ export function PayloadPanel({
           {t(
             " (composer) ข้อความแจ้งข้อผิดพลาดของฟอร์มมีความหมายตรงกับกฎเหล่านี้",
             " on Composer. The form's own messages mean the same as these rules."
+          )}{" "}
+          {t(
+            "ตำบลที่ไม่มีรหัสไปรษณีย์ (ราว 50 แห่ง) ต้องใช้ nullable แทน required สำหรับ postal_code",
+            "For the about 50 subdistricts with no postal code, use nullable instead of required on postal_code."
           )}
         </p>
       </TabsContent>
