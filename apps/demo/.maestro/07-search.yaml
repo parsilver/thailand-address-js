@@ -15,6 +15,7 @@ name: search
 - tapOn: "83100"
 - scrollUntilVisible: { element: '.*"subdistrict_code": "830108",\s*"postal_code": "83100".*', timeout: 10000 }
 - takeScreenshot: 07-search-karon
+- scrollUntilVisible: { direction: UP, element: "ค้นหาที่อยู่", timeout: 10000, centerElement: true }
 - tapOn: "ค้นหาที่อยู่"
 - eraseText: 40
 - inputText: "bang rak"
@@ -22,5 +23,6 @@ name: search
 - eraseText: 40
 - inputText: "zzzz"
 - extendedWaitUntil: { visible: "กรอกเอง", timeout: 10000 }
+- scrollUntilVisible: { element: "กรอกเอง", timeout: 10000, centerElement: true }
 - takeScreenshot: 07-search-none
 - tapOn: "กรอกเอง"
