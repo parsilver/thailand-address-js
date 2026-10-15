@@ -1,0 +1,52 @@
+name: Release
+
+# Publishes packages/core to npm when a v* tag is pushed, e.g. v0.1.0.
+# The tag must equal packages/core/package.json's version.
+#
+# Auth today is the NPM_TOKEN secret. To move to npm Trusted Publishing after
+# the first release: add this repo and workflow (release.yml) as a trusted
+# publisher on npmjs.com, then delete the NODE_AUTH_TOKEN line below. Nothing
+# else changes; id-token: write is already granted for provenance.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+      - run: pnpm install --frozen-lockfile
+      - name: Tag matches the package version
+        working-directory: packages/core
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          version="v$(node -p "require('./package.json').version")"
+          if [ "$TAG" != "$version" ]; then
+            echo "::error::tag $TAG does not match packages/core version $version"
+            exit 1
+          fi
+      - run: pnpm --filter @farzai/thailand-address check:types-generated
+      - run: pnpm --filter @farzai/thailand-address test
+      - run: pnpm --filter @farzai/thailand-address build
+      - name: Publish
+        working-directory: packages/core
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --provenance --access public
