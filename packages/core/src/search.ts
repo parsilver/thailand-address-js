@@ -154,12 +154,15 @@ export function runSearch(
   }
   const nameOf = (e: Entry) => (e.hit.area?.subdistrict ?? e.hit.district ?? e.hit.province).name.th
   const codeOf = (e: Entry) => (e.hit.area?.subdistrict ?? e.hit.district ?? e.hit.province).code
-  // How well it matched, then the more specific level, then by name, then
-  // by code and postal code so the order is stable.
+  // How well it matched first. Among exact matches the higher level wins
+  // ("chiang mai" is the province before the Roi Et tambon of that name);
+  // among partial matches the more specific level comes first. Then by
+  // name, then by code and postal code so the order is stable.
+  const levelOrder = (e: Entry, q: number) => (q === 0 ? -LEVEL_RANK[e.own] : LEVEL_RANK[e.own])
   scored.sort(
     (a, b) =>
       a.s.q - b.s.q ||
-      LEVEL_RANK[a.e.own] - LEVEL_RANK[b.e.own] ||
+      levelOrder(a.e, a.s.q) - levelOrder(b.e, b.s.q) ||
       opts.collator.compare(nameOf(a.e), nameOf(b.e)) ||
       codeOf(a.e).localeCompare(codeOf(b.e)) ||
       (a.e.hit.postal_code ?? '').localeCompare(b.e.hit.postal_code ?? ''),
