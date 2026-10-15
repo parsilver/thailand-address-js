@@ -64,6 +64,13 @@ jobs:
       contents: read
       id-token: write
     steps:
+      # Only the publish script, no package.json or node_modules: nothing from
+      # the dependency tree runs where the publish credential can be minted.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: scripts/publish-core.sh
+          sparse-checkout-cone-mode: false
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: package
@@ -72,7 +79,8 @@ jobs:
         with:
           node-version: 22
           registry-url: https://registry.npmjs.org
+      # The same script, with the same pkg/ layout, that ci.yml dry-runs on PRs.
       - name: Publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish pkg/*.tgz --provenance --access public
+        run: bash scripts/publish-core.sh pkg --provenance
