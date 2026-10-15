@@ -11,12 +11,14 @@ export type DatasetErrorCode =
 /** A dataset file could not be loaded or trusted. Retrying the call refetches it. */
 export class DatasetError extends Error {
   override readonly name = 'DatasetError'
-  constructor(
-    readonly code: DatasetErrorCode,
-    message: string,
-    readonly url: string,
-    readonly status?: number,
-  ) {
+  readonly code: DatasetErrorCode
+  readonly url: string
+  readonly status: number | undefined
+
+  constructor(code: DatasetErrorCode, message: string, url: string, status?: number) {
     super(message)
+    this.code = code
+    this.url = url
+    this.status = status
   }
 }
