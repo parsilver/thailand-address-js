@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { DatasetError, SNAPSHOT } from '../src'
-import { BASE, client } from './helpers'
+import { BASE, client, fixtureFetch } from './helpers'
 
 describe('loading', () => {
   it('pins the snapshot in every URL and never asks for latest.json', async () => {
@@ -96,5 +96,22 @@ describe('hostile rows', () => {
       },
     })
     expect((await ta.lookupPostalCode('83100')).status).toBe('found')
+  })
+})
+
+describe('privacy', () => {
+  it('sends no Referer to the data host, so it does not learn which page asked', async () => {
+    const inits: (RequestInit | undefined)[] = []
+    const { createThaiAddress } = await import('../src')
+    const ta = createThaiAddress({
+      baseUrl: BASE,
+      fetch: (async (input: RequestInfo | URL, init?: RequestInit) => {
+        inits.push(init)
+        return fixtureFetch().fetch(input, init)
+      }) as typeof fetch,
+    })
+    await ta.provinces()
+    expect(inits[0]?.referrerPolicy).toBe('no-referrer')
+    expect(inits[0]?.credentials).toBe('omit')
   })
 })
