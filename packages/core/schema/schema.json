@@ -1,0 +1,1112 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://data.farzai.com/thailand-address/v1/2026-10-15/schema.json",
+    "title": "Thai address dataset, schema v1",
+    "description": "Every file of one snapshot of the Thai address dataset (provinces, districts, subdistricts, postal codes, changes, manifest), plus v1/latest.json and v1/snapshots.json. Each data file is an envelope {schema_version, snapshot, data}; data is a list, except in by-province/<code>.json, where it is one province's object. Consumers must ignore fields, name languages, change kinds and enum values they do not know: adding any of them is a minor schema_version change within v1. Renaming, removing or changing the meaning of a field is v2. Codes are strings and are never reused for a different area. null means unknown, never empty and never 'since the beginning'. Dates are ISO 8601 (YYYY-MM-DD). Enums are lowercase.",
+    "$defs": {
+        "schema_version": {
+            "description": "Semantic version of this schema. A minor version only adds fields or files; renaming, removing or changing the meaning of anything is a new path (v2).",
+            "type": "string",
+            "pattern": "^1\\.\\d+\\.\\d+$",
+            "examples": [
+                "1.0.0"
+            ]
+        },
+        "snapshot_id": {
+            "description": "Snapshot id: the UTC publish date, with .1, .2 ... for a same-day republish. Pin this id; do not build on latest.json.",
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}(\\.[1-9]\\d*)?$",
+            "examples": [
+                "2026-10-14",
+                "2026-10-14.1"
+            ]
+        },
+        "date": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "examples": [
+                "2006-01-01"
+            ]
+        },
+        "nullable_date": {
+            "description": "ISO 8601 date, or null when unknown.",
+            "oneOf": [
+                {
+                    "$ref": "#/$defs/date"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "province_code": {
+            "description": "DOPA province code: 2 digits, as a string.",
+            "type": "string",
+            "pattern": "^\\d{2}$",
+            "examples": [
+                "10",
+                "38"
+            ]
+        },
+        "district_code": {
+            "description": "DOPA district code: 4 digits, the province code plus 2.",
+            "type": "string",
+            "pattern": "^\\d{4}$",
+            "examples": [
+                "1001",
+                "5025"
+            ]
+        },
+        "subdistrict_code": {
+            "description": "DOPA subdistrict code: 6 digits, the district code plus 2.",
+            "type": "string",
+            "pattern": "^\\d{6}$",
+            "examples": [
+                "100101"
+            ]
+        },
+        "postal_code": {
+            "description": "Thai postal code: 5 digits, as a string. Its first two digits are a postal area, which is not the DOPA province code (Samut Prakan, DOPA 11, uses 10xxx). Never derive a postal code from a district or province code.",
+            "type": "string",
+            "pattern": "^\\d{5}$",
+            "examples": [
+                "10200"
+            ]
+        },
+        "name": {
+            "description": "Names by BCP 47 language tag, without the administrative prefix (see kind for the prefix table). Consumers must ignore language tags they do not know; more may be added in v1.",
+            "type": "object",
+            "properties": {
+                "th": {
+                    "description": "Thai name as DOPA publishes it, prefix removed. Abolished areas keep DOPA's text, which can include abbreviations such as 'อ.' and 'จ.'.",
+                    "type": "string",
+                    "minLength": 1,
+                    "examples": [
+                        "พระนคร"
+                    ]
+                },
+                "en": {
+                    "description": "English name in RTGS romanisation, as DOPA publishes it; null when DOPA has none. Do not transliterate one yourself.",
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "examples": [
+                        "Phra Nakhon",
+                        null
+                    ]
+                }
+            },
+            "required": [
+                "th",
+                "en"
+            ]
+        },
+        "status": {
+            "description": "active: in use. abolished: no longer in use; the code is never given to another area.",
+            "type": "string",
+            "enum": [
+                "active",
+                "abolished"
+            ]
+        },
+        "history": {
+            "properties": {
+                "status": {
+                    "$ref": "#/$defs/status"
+                },
+                "effective_from": {
+                    "description": "When the area came into being; null means unknown (DOPA does not publish it in bulk), not 'since the beginning'.",
+                    "$ref": "#/$defs/nullable_date"
+                },
+                "abolished_on": {
+                    "description": "When the area was abolished, from DOPA's cancellation date; null for an active area.",
+                    "$ref": "#/$defs/nullable_date"
+                },
+                "replaced_by": {
+                    "description": "Codes, at the same level, of the areas that replaced this one. [] for an active area: nothing has replaced it. For an abolished area: the list of its successors; [] when it is known that nothing replaced it; null when the successors are unknown. DOPA does not publish successors, so every abolished area is null today.",
+                    "oneOf": [
+                        {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "pattern": "^\\d{2,6}$"
+                            },
+                            "uniqueItems": true
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "examples": [
+                        [],
+                        null,
+                        [
+                            "3801"
+                        ]
+                    ]
+                }
+            },
+            "required": [
+                "status",
+                "effective_from",
+                "abolished_on",
+                "replaced_by"
+            ],
+            "allOf": [
+                {
+                    "if": {
+                        "properties": {
+                            "status": {
+                                "const": "active"
+                            }
+                        },
+                        "required": [
+                            "status"
+                        ]
+                    },
+                    "then": {
+                        "properties": {
+                            "replaced_by": {
+                                "const": []
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "province": {
+            "description": "One province, or Bangkok.",
+            "type": "object",
+            "allOf": [
+                {
+                    "$ref": "#/$defs/history"
+                }
+            ],
+            "properties": {
+                "code": {
+                    "$ref": "#/$defs/province_code"
+                },
+                "iso_code": {
+                    "description": "ISO 3166-2:TH code; null when ISO has none.",
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "pattern": "^TH-\\d{2}$",
+                    "examples": [
+                        "TH-10"
+                    ]
+                },
+                "name": {
+                    "$ref": "#/$defs/name"
+                },
+                "kind": {
+                    "description": "province (Thai prefix จังหวัด, English 'Province'), or special_administrative_area for Bangkok (no prefix).",
+                    "type": "string",
+                    "enum": [
+                        "province",
+                        "special_administrative_area"
+                    ]
+                }
+            },
+            "required": [
+                "code",
+                "iso_code",
+                "name",
+                "kind"
+            ]
+        },
+        "district": {
+            "description": "One district: an amphoe, or a khet of Bangkok.",
+            "type": "object",
+            "allOf": [
+                {
+                    "$ref": "#/$defs/history"
+                }
+            ],
+            "properties": {
+                "code": {
+                    "$ref": "#/$defs/district_code"
+                },
+                "province_code": {
+                    "$ref": "#/$defs/province_code"
+                },
+                "name": {
+                    "$ref": "#/$defs/name"
+                },
+                "kind": {
+                    "description": "amphoe (Thai prefix อำเภอ, English 'District'), or khet in Bangkok (Thai prefix เขต, English 'Khet').",
+                    "type": "string",
+                    "enum": [
+                        "amphoe",
+                        "khet"
+                    ]
+                }
+            },
+            "required": [
+                "code",
+                "province_code",
+                "name",
+                "kind"
+            ]
+        },
+        "subdistrict": {
+            "description": "One subdistrict: a tambon, or a khwaeng of Bangkok.",
+            "type": "object",
+            "allOf": [
+                {
+                    "$ref": "#/$defs/history"
+                }
+            ],
+            "properties": {
+                "code": {
+                    "$ref": "#/$defs/subdistrict_code"
+                },
+                "district_code": {
+                    "$ref": "#/$defs/district_code"
+                },
+                "province_code": {
+                    "description": "Deliberately denormalised from the code, and immutable: an area that changes province gets a new code.",
+                    "$ref": "#/$defs/province_code"
+                },
+                "name": {
+                    "$ref": "#/$defs/name"
+                },
+                "kind": {
+                    "description": "tambon (Thai prefix ตำบล, English 'Subdistrict'), or khwaeng in Bangkok (Thai prefix แขวง, English 'Khwaeng').",
+                    "type": "string",
+                    "enum": [
+                        "tambon",
+                        "khwaeng"
+                    ]
+                }
+            },
+            "required": [
+                "code",
+                "district_code",
+                "province_code",
+                "name",
+                "kind"
+            ]
+        },
+        "postal_code_link": {
+            "description": "One postal code of one subdistrict. The relation is many-to-many: a subdistrict can have several codes and a code serves many subdistricts.",
+            "type": "object",
+            "properties": {
+                "postal_code": {
+                    "$ref": "#/$defs/postal_code"
+                },
+                "subdistrict_code": {
+                    "$ref": "#/$defs/subdistrict_code"
+                },
+                "sources": {
+                    "description": "Which sources list this code for this subdistrict.",
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "enum": [
+                            "thailandpost",
+                            "mdes"
+                        ]
+                    },
+                    "minItems": 1,
+                    "uniqueItems": true,
+                    "examples": [
+                        [
+                            "thailandpost",
+                            "mdes"
+                        ]
+                    ]
+                },
+                "kind": {
+                    "description": "standard: a delivery postal code. facility: the code of a mail-processing facility (e.g. 10001, Suvarnabhumi Mail Center), not of the places around it.",
+                    "type": "string",
+                    "enum": [
+                        "standard",
+                        "facility"
+                    ]
+                },
+                "coverage": {
+                    "description": "full: the subdistrict's only standard postal code. partial: one of several, so it may serve only part of the subdistrict (some tambon are split by village), or a facility code. Do not assume a partial code is valid for every address in the subdistrict.",
+                    "type": "string",
+                    "enum": [
+                        "full",
+                        "partial"
+                    ]
+                },
+                "note": {
+                    "description": "A localized note, keyed by BCP 47 language like name: for a facility code the facility's name, for a verified cross-province code the evidence. null for an ordinary link, and null per language that no source gives (nothing is translated). Consumers must ignore languages they do not know.",
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "properties": {
+                                "th": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "minLength": 1
+                                },
+                                "en": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "minLength": 1
+                                }
+                            },
+                            "required": [
+                                "th",
+                                "en"
+                            ]
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "examples": [
+                        null,
+                        {
+                            "th": "ศูนย์ไปรษณีย์สุวรรณภูมิ",
+                            "en": "Suvarnabhumi Mail Center"
+                        },
+                        {
+                            "th": null,
+                            "en": "Cross-province: Kong Din, Rayong: Thailand Post 22160; MDES 22160 = Na Yai Am post office (Na Yai Am, Chanthaburi)"
+                        }
+                    ]
+                },
+                "status": {
+                    "description": "active: the sources list this code for this subdistrict. abolished: a published snapshot had the link and the sources no longer give it. Links are never removed from this file, so filter on status: 'active' to get the codes in use.",
+                    "$ref": "#/$defs/status"
+                },
+                "effective_from": {
+                    "description": "When the code started to serve this subdistrict; null means unknown.",
+                    "$ref": "#/$defs/nullable_date"
+                },
+                "abolished_on": {
+                    "description": "For an abolished link, the date of the snapshot whose sources first no longer gave it (the change happened on or before it); null when active.",
+                    "$ref": "#/$defs/nullable_date"
+                }
+            },
+            "required": [
+                "postal_code",
+                "subdistrict_code",
+                "sources",
+                "kind",
+                "coverage",
+                "note",
+                "status",
+                "effective_from",
+                "abolished_on"
+            ]
+        },
+        "change": {
+            "description": "One change against the previous published snapshot (manifest.previous_snapshot). To catch up over several snapshots, rebuild from the history fields of the latest one rather than chaining changes files. There is no 'moved': a move is an abolished code with replaced_by plus an added code.",
+            "type": "object",
+            "properties": {
+                "level": {
+                    "type": "string",
+                    "enum": [
+                        "province",
+                        "district",
+                        "subdistrict"
+                    ]
+                },
+                "code": {
+                    "type": "string",
+                    "pattern": "^\\d{2}(\\d{2}){0,2}$",
+                    "examples": [
+                        "100101"
+                    ]
+                },
+                "change": {
+                    "type": "string",
+                    "enum": [
+                        "added",
+                        "renamed",
+                        "abolished",
+                        "postal_codes_changed",
+                        "replaced_by_changed"
+                    ],
+                    "description": "The kind of change. More kinds may be added within v1: ignore change kinds you do not know."
+                },
+                "before": {
+                    "description": "Shape fixed per change kind; see the if/then rules."
+                },
+                "after": {
+                    "description": "Shape fixed per change kind; see the if/then rules."
+                },
+                "effective_on": {
+                    "description": "When the change took effect, when known (the abolition date for abolished); null otherwise.",
+                    "$ref": "#/$defs/nullable_date"
+                }
+            },
+            "required": [
+                "level",
+                "code",
+                "change",
+                "before",
+                "after",
+                "effective_on"
+            ],
+            "allOf": [
+                {
+                    "if": {
+                        "properties": {
+                            "change": {
+                                "const": "added"
+                            }
+                        }
+                    },
+                    "then": {
+                        "properties": {
+                            "before": {
+                                "type": "null"
+                            },
+                            "after": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "$ref": "#/$defs/name"
+                                    },
+                                    "kind": {
+                                        "type": "string"
+                                    },
+                                    "status": {
+                                        "$ref": "#/$defs/status"
+                                    }
+                                },
+                                "required": [
+                                    "name",
+                                    "kind",
+                                    "status"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "change": {
+                                "const": "renamed"
+                            }
+                        }
+                    },
+                    "then": {
+                        "properties": {
+                            "before": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "$ref": "#/$defs/name"
+                                    }
+                                },
+                                "required": [
+                                    "name"
+                                ]
+                            },
+                            "after": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "$ref": "#/$defs/name"
+                                    }
+                                },
+                                "required": [
+                                    "name"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "change": {
+                                "const": "abolished"
+                            }
+                        }
+                    },
+                    "then": {
+                        "properties": {
+                            "before": {
+                                "type": "object",
+                                "properties": {
+                                    "status": {
+                                        "const": "active"
+                                    }
+                                },
+                                "required": [
+                                    "status"
+                                ]
+                            },
+                            "after": {
+                                "type": "object",
+                                "properties": {
+                                    "status": {
+                                        "const": "abolished"
+                                    },
+                                    "abolished_on": {
+                                        "$ref": "#/$defs/nullable_date"
+                                    },
+                                    "replaced_by": {
+                                        "oneOf": [
+                                            {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "string",
+                                                    "pattern": "^\\d{2,6}$"
+                                                }
+                                            },
+                                            {
+                                                "type": "null"
+                                            }
+                                        ],
+                                        "description": "As in the area's replaced_by: the successor codes, [] when known to be none, or null when unknown."
+                                    }
+                                },
+                                "required": [
+                                    "status",
+                                    "abolished_on",
+                                    "replaced_by"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "change": {
+                                "const": "postal_codes_changed"
+                            }
+                        }
+                    },
+                    "then": {
+                        "properties": {
+                            "level": {
+                                "const": "subdistrict"
+                            },
+                            "before": {
+                                "type": "object",
+                                "properties": {
+                                    "postal_codes": {
+                                        "type": "array",
+                                        "items": {
+                                            "$ref": "#/$defs/postal_code"
+                                        }
+                                    }
+                                },
+                                "required": [
+                                    "postal_codes"
+                                ]
+                            },
+                            "after": {
+                                "type": "object",
+                                "properties": {
+                                    "postal_codes": {
+                                        "type": "array",
+                                        "items": {
+                                            "$ref": "#/$defs/postal_code"
+                                        }
+                                    }
+                                },
+                                "required": [
+                                    "postal_codes"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "change": {
+                                "const": "replaced_by_changed"
+                            }
+                        }
+                    },
+                    "then": {
+                        "description": "The successors of an area already abolished became known or changed.",
+                        "properties": {
+                            "before": {
+                                "type": "object",
+                                "properties": {
+                                    "replaced_by": {
+                                        "oneOf": [
+                                            {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "string",
+                                                    "pattern": "^\\d{2,6}$"
+                                                },
+                                                "uniqueItems": true
+                                            },
+                                            {
+                                                "type": "null"
+                                            }
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "replaced_by"
+                                ]
+                            },
+                            "after": {
+                                "type": "object",
+                                "properties": {
+                                    "replaced_by": {
+                                        "oneOf": [
+                                            {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "string",
+                                                    "pattern": "^\\d{2,6}$"
+                                                },
+                                                "uniqueItems": true
+                                            },
+                                            {
+                                                "type": "null"
+                                            }
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "replaced_by"
+                                ]
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "envelope": {
+            "description": "Every data file: {schema_version, snapshot, data}, so a file fetched on its own still says what it is.",
+            "type": "object",
+            "properties": {
+                "schema_version": {
+                    "$ref": "#/$defs/schema_version"
+                },
+                "snapshot": {
+                    "$ref": "#/$defs/snapshot_id"
+                },
+                "data": {
+                    "type": "array"
+                }
+            },
+            "required": [
+                "schema_version",
+                "snapshot",
+                "data"
+            ]
+        },
+        "provinces_file": {
+            "description": "provinces.json",
+            "allOf": [
+                {
+                    "$ref": "#/$defs/envelope"
+                }
+            ],
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/province"
+                    }
+                }
+            }
+        },
+        "districts_file": {
+            "description": "districts.json",
+            "allOf": [
+                {
+                    "$ref": "#/$defs/envelope"
+                }
+            ],
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/district"
+                    }
+                }
+            }
+        },
+        "subdistricts_file": {
+            "description": "subdistricts.json",
+            "allOf": [
+                {
+                    "$ref": "#/$defs/envelope"
+                }
+            ],
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/subdistrict"
+                    }
+                }
+            }
+        },
+        "postal_codes_file": {
+            "description": "postal_codes.json",
+            "allOf": [
+                {
+                    "$ref": "#/$defs/envelope"
+                }
+            ],
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/postal_code_link"
+                    }
+                }
+            }
+        },
+        "changes_file": {
+            "description": "changes.json",
+            "allOf": [
+                {
+                    "$ref": "#/$defs/envelope"
+                }
+            ],
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/change"
+                    }
+                }
+            }
+        },
+        "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+        },
+        "manifest": {
+            "description": "manifest.json: what the snapshot contains and where it came from.",
+            "type": "object",
+            "properties": {
+                "schema_version": {
+                    "$ref": "#/$defs/schema_version"
+                },
+                "snapshot": {
+                    "$ref": "#/$defs/snapshot_id"
+                },
+                "generated_at": {
+                    "description": "When the snapshot was built (UTC, ISO 8601).",
+                    "type": "string",
+                    "examples": [
+                        "2026-10-14T16:00:00Z"
+                    ]
+                },
+                "previous_snapshot": {
+                    "description": "The published snapshot changes.json is against; null for the first one.",
+                    "oneOf": [
+                        {
+                            "$ref": "#/$defs/snapshot_id"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "counts": {
+                    "description": "Row counts per file and level.",
+                    "type": "object"
+                },
+                "files": {
+                    "description": "Every file of the snapshot except the manifest itself, with its sha256 and size.",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "object",
+                        "properties": {
+                            "sha256": {
+                                "$ref": "#/$defs/sha256"
+                            },
+                            "bytes": {
+                                "type": "integer",
+                                "minimum": 0
+                            },
+                            "content_type": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "sha256",
+                            "bytes",
+                            "content_type"
+                        ]
+                    }
+                },
+                "sources": {
+                    "description": "The official sources this snapshot was built from.",
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "string",
+                                "examples": [
+                                    "dopa_ccaatt"
+                                ]
+                            },
+                            "name": {
+                                "type": "string"
+                            },
+                            "publisher": {
+                                "type": "string"
+                            },
+                            "url": {
+                                "type": "string"
+                            },
+                            "fetched_at": {
+                                "type": "string",
+                                "examples": [
+                                    "2026-10-14T08:14:00Z"
+                                ]
+                            },
+                            "sha256": {
+                                "$ref": "#/$defs/sha256"
+                            },
+                            "bytes": {
+                                "type": "integer"
+                            },
+                            "as_of": {
+                                "description": "The data date the source states; null when it states none.",
+                                "$ref": "#/$defs/nullable_date"
+                            },
+                            "license": {
+                                "description": "The licence the source states; null when it states none.",
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "examples": [
+                                    "CC-BY",
+                                    null
+                                ]
+                            },
+                            "attribution": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "name",
+                            "publisher",
+                            "url",
+                            "fetched_at",
+                            "sha256",
+                            "bytes",
+                            "as_of",
+                            "license",
+                            "attribution"
+                        ]
+                    }
+                }
+            },
+            "required": [
+                "schema_version",
+                "snapshot",
+                "generated_at",
+                "previous_snapshot",
+                "counts",
+                "files",
+                "sources"
+            ]
+        },
+        "latest": {
+            "description": "v1/latest.json: the newest published snapshot, for humans and discovery. Short cache. Pin a snapshot id in code instead of reading this.",
+            "type": "object",
+            "properties": {
+                "schema_version": {
+                    "$ref": "#/$defs/schema_version"
+                },
+                "snapshot": {
+                    "$ref": "#/$defs/snapshot_id"
+                },
+                "manifest_sha256": {
+                    "$ref": "#/$defs/sha256"
+                }
+            },
+            "required": [
+                "schema_version",
+                "snapshot",
+                "manifest_sha256"
+            ]
+        },
+        "snapshots": {
+            "description": "v1/snapshots.json: every snapshot ever uploaded. A withdrawn one stays reachable at its immutable URL but must not be used.",
+            "type": "object",
+            "properties": {
+                "schema_version": {
+                    "$ref": "#/$defs/schema_version"
+                },
+                "snapshots": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "$ref": "#/$defs/snapshot_id"
+                            },
+                            "status": {
+                                "type": "string",
+                                "enum": [
+                                    "published",
+                                    "withdrawn"
+                                ]
+                            },
+                            "published_at": {
+                                "description": "When this snapshot became reachable from this index (UTC, ISO 8601), stamped by the publish, not the build.",
+                                "type": "string"
+                            },
+                            "manifest_sha256": {
+                                "$ref": "#/$defs/sha256"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "status",
+                            "published_at",
+                            "manifest_sha256"
+                        ]
+                    }
+                }
+            },
+            "required": [
+                "schema_version",
+                "snapshots"
+            ]
+        },
+        "postal_codes_index_entry": {
+            "description": "One postal code and every subdistrict it is linked to.",
+            "type": "object",
+            "properties": {
+                "postal_code": {
+                    "$ref": "#/$defs/postal_code"
+                },
+                "subdistricts": {
+                    "description": "The subdistricts linked to this postal code, by code, with the link's kind, coverage and status (as in postal_codes.json).",
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "code": {
+                                "$ref": "#/$defs/subdistrict_code"
+                            },
+                            "kind": {
+                                "type": "string",
+                                "enum": [
+                                    "standard",
+                                    "facility"
+                                ]
+                            },
+                            "coverage": {
+                                "type": "string",
+                                "enum": [
+                                    "full",
+                                    "partial"
+                                ]
+                            },
+                            "status": {
+                                "$ref": "#/$defs/status"
+                            }
+                        },
+                        "required": [
+                            "code",
+                            "kind",
+                            "coverage",
+                            "status"
+                        ]
+                    },
+                    "minItems": 1,
+                    "examples": [
+                        [
+                            {
+                                "code": "100101",
+                                "kind": "standard",
+                                "coverage": "full",
+                                "status": "active"
+                            }
+                        ]
+                    ]
+                }
+            },
+            "required": [
+                "postal_code",
+                "subdistricts"
+            ]
+        },
+        "postal_codes_index_file": {
+            "description": "index/postal_codes.json: postal code to subdistricts, derived from postal_codes.json, sorted by postal code. For a lookup by postal code without downloading every link.",
+            "allOf": [
+                {
+                    "$ref": "#/$defs/envelope"
+                }
+            ],
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/postal_codes_index_entry"
+                    }
+                }
+            }
+        },
+        "by_province_file": {
+            "description": "by-province/<code>.json: one province with its districts, subdistricts and their postal links, abolished ones included, derived from the main files. For a frontend that needs one province at a time. Unlike the other data files, data is an object.",
+            "type": "object",
+            "properties": {
+                "schema_version": {
+                    "$ref": "#/$defs/schema_version"
+                },
+                "snapshot": {
+                    "$ref": "#/$defs/snapshot_id"
+                },
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "province": {
+                            "$ref": "#/$defs/province"
+                        },
+                        "districts": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/$defs/district"
+                            }
+                        },
+                        "subdistricts": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/$defs/subdistrict"
+                            }
+                        },
+                        "postal_codes": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/$defs/postal_code_link"
+                            }
+                        }
+                    },
+                    "required": [
+                        "province",
+                        "districts",
+                        "subdistricts",
+                        "postal_codes"
+                    ]
+                }
+            },
+            "required": [
+                "schema_version",
+                "snapshot",
+                "data"
+            ]
+        }
+    }
+}

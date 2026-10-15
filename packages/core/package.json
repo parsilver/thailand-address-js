@@ -1,0 +1,65 @@
+{
+  "name": "@farzai/thailand-address",
+  "version": "0.1.0",
+  "description": "Lazy, typed lookups for the Thai address dataset (provinces, districts, subdistricts, postal codes) at data.farzai.com",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/parsilver/thailand-address-js.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://thailand-address-demo.farzai.com",
+  "keywords": [
+    "thailand",
+    "address",
+    "postal-code",
+    "province",
+    "district",
+    "subdistrict",
+    "tambon",
+    "amphoe"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "schema",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "gen:types": "node scripts/gen-types.mjs",
+    "check:types-generated": "node scripts/gen-types.mjs --check",
+    "build": "tsdown",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test:live": "THAILAND_ADDRESS_LIVE=1 vitest run test/live.test.ts"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^22.20.5",
+    "eslint": "^10.12.0",
+    "globals": "^17.13.0",
+    "json-schema-to-typescript": "^16.0.0",
+    "publint": "^0.3.25",
+    "tsdown": "^0.23.1",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.71.2",
+    "vitest": "^5.0.4"
+  }
+}
