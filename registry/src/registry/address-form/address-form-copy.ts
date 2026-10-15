@@ -169,10 +169,18 @@ export type Translate = (
   vars?: Record<string, string | number>
 ) => string
 
+// In English a level label sits mid-sentence ("Select district"), so {k}
+// and {f} start lower case there; Thai has no case.
+const midSentence = new Set(["k", "f"])
+
 export function createTranslator(locale: Locale): Translate {
   const table = tables[locale]
+  const fit = (name: string, v: string) =>
+    locale === "en" && midSentence.has(name)
+      ? v.charAt(0).toLowerCase() + v.slice(1)
+      : v
   return (key, vars) =>
     table[key].replace(/\{(\w+)\}/g, (m, k: string) =>
-      vars && k in vars ? String(vars[k]) : m
+      vars && k in vars ? fit(k, String(vars[k])) : m
     )
 }

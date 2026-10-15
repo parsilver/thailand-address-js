@@ -298,4 +298,42 @@ describe("paths the first tests missed", () => {
     )
     expect(province).toHaveFocus()
   })
+
+  it("Enter with suggestions open and none highlighted does not submit; it highlights the first", async () => {
+    const { client } = fixtureClient()
+    const user = userEvent.setup()
+    let submitted = 0
+    render(
+      <Host
+        client={client}
+        formProps={{ mode: "search" }}
+        onSubmit={() => submitted++}
+      />
+    )
+    const box = screen.getByRole("combobox", { name: "ค้นหาที่อยู่" })
+    await user.type(box, "karon")
+    await screen.findByRole("option")
+    await user.keyboard("{Enter}")
+    expect(submitted).toBe(0)
+    expect(screen.queryByText("กรุณาเลือกจังหวัด")).not.toBeInTheDocument()
+    expect(box).toHaveAttribute("aria-activedescendant")
+    await user.keyboard("{Enter}")
+    await waitFor(() => expect(valueOf().subdistrict_code).toBe("830108"))
+  })
+
+  it("English placeholders read in sentence case", async () => {
+    const { client } = fixtureClient()
+    const user = userEvent.setup()
+    render(<Host client={client} />)
+    await user.click(screen.getByRole("button", { name: "toggle locale" }))
+    expect(
+      screen.getByRole("combobox", { name: "District" })
+    ).toHaveTextContent("Select district")
+    await user.type(screen.getByLabelText("Postal code"), "10200")
+    await waitFor(() =>
+      expect(
+        screen.getByRole("combobox", { name: "Subdistrict (khwaeng)" })
+      ).toHaveTextContent("Select subdistrict (khwaeng)")
+    )
+  })
 })

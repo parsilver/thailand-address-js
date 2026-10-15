@@ -93,9 +93,12 @@ export function AddressSearch({
       e.preventDefault()
       setOpen(true)
       if (hits.length) setActiveIndex((i) => (i <= 0 ? hits.length - 1 : i - 1))
-    } else if (e.key === "Enter" && expanded && activeIndex >= 0) {
+    } else if (e.key === "Enter" && expanded) {
+      // Never submit the form from an open list: Enter with nothing
+      // highlighted highlights the first result, and a second Enter picks it.
       e.preventDefault()
-      choose(hits[activeIndex]!)
+      if (activeIndex >= 0) choose(hits[activeIndex]!)
+      else setActiveIndex(0)
     } else if (e.key === "Escape" && expanded) {
       e.preventDefault()
       setOpen(false)
