@@ -3,7 +3,7 @@ url: ${BASE}
 name: area-first
 ---
 - openLink: ${BASE}/examples/area-first
-- extendedWaitUntil: { visible: "เลือกจังหวัดก่อน", timeout: 20000 }
+- scrollUntilVisible: { element: "เลือกจังหวัดก่อน", timeout: 20000, centerElement: true }
 - assertVisible: "เลือกอำเภอ/เขตก่อน"
 - scrollUntilVisible: { element: "เลือกจังหวัด", timeout: 10000 }
 - tapOn: "เลือกจังหวัด"
@@ -18,13 +18,15 @@ name: area-first
 - inputText: "เกาะแก้ว"
 - pressKey: Enter
 - scrollUntilVisible: { element: "รหัสไปรษณีย์ของพื้นที่นี้", timeout: 10000 }
-- scrollUntilVisible: { element: "83000", timeout: 5000 }
-- assertVisible: "83200"
+- scrollUntilVisible: { direction: UP, element: "83200", timeout: 5000, centerElement: true }
+- assertVisible: "83000"
 - scrollUntilVisible: { element: '.*"subdistrict_code": "830103",\s*"postal_code": null.*', timeout: 15000 }
 - takeScreenshot: 06-area-kohkaew
+- scrollUntilVisible: { direction: UP, element: "83200", timeout: 10000, centerElement: true }
 - tapOn: "83200"
 - scrollUntilVisible: { element: '.*"subdistrict_code": "830103",\s*"postal_code": "83200".*', timeout: 5000 }
-- tapOn: "ภูเก็ต"
+- scrollUntilVisible: { direction: UP, element: { id: "demo-demo-province" }, timeout: 10000, centerElement: true }
+- tapOn: { id: "demo-demo-province" }
 - inputText: "กระบี่"
 - pressKey: Enter
 - scrollUntilVisible: { element: '.*"province_code": "81",\s*"district_code": null,\s*"subdistrict_code": null,\s*"postal_code": null.*', timeout: 10000 }

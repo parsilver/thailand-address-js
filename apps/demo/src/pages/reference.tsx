@@ -1,5 +1,6 @@
 import { SNAPSHOT } from "@farzai/thailand-address"
 
+import { cn } from "@/lib/utils"
 import { CodeBlock } from "@/site/code-block"
 import { useT } from "@/lib/locale"
 import { laravelRules } from "@/lib/payload"
@@ -9,49 +10,73 @@ import { Page, Prose, Section } from "./page"
 
 type Row = [name: string, type: string, def: string, th: string, en: string]
 
+/**
+ * Props in three columns, the default under the description. Row rules
+ * only. Under 768px each row stacks into a block and the header row is
+ * visually hidden but still read; the explicit roles keep
+ * it a table for screen readers once display is no longer table.
+ */
 function PropsTable({ rows, caption }: { rows: Row[]; caption: string }) {
   const t = useT()
+  const cell = "border-b py-3.5 pr-4 max-md:block max-md:border-0"
   return (
-    <div className="overflow-x-auto rounded-xl border">
-      <table className="w-full text-left text-sm">
-        <caption className="sr-only">{caption}</caption>
-        <thead className="border-b bg-muted/40">
-          <tr>
-            <th scope="col" className="p-3 font-medium">
-              {t("พร็อพ", "Prop")}
+    <table role="table" className="w-full text-left text-sm max-md:block">
+      <caption className="sr-only">{caption}</caption>
+      <thead role="rowgroup" className="max-md:sr-only">
+        <tr role="row">
+          {[
+            t("พร็อพ", "Prop"),
+            t("ชนิด", "Type"),
+            t("ทำอะไร", "What it does"),
+          ].map((h, i) => (
+            <th
+              key={i}
+              role="columnheader"
+              scope="col"
+              className="border-b pr-4 pb-2.5 text-[13px] font-medium text-muted-foreground"
+            >
+              {h}
             </th>
-            <th scope="col" className="p-3 font-medium">
-              {t("ชนิด", "Type")}
-            </th>
-            <th scope="col" className="p-3 font-medium">
-              {t("ค่าเริ่มต้น", "Default")}
-            </th>
-            <th scope="col" className="p-3 font-medium">
-              {t("ทำอะไร", "What it does")}
-            </th>
-          </tr>
-        </thead>
-        <tbody className="divide-y">
-          {rows.map(([name, type, def, th, en]) => (
-            <tr key={name} className="align-top">
-              <th
-                scope="row"
-                className="p-3 font-mono font-normal whitespace-nowrap"
-              >
-                {name}
-              </th>
-              <td className="p-3 font-mono text-[13px] text-muted-foreground">
-                {type}
-              </td>
-              <td className="p-3 font-mono text-[13px] text-muted-foreground">
-                {def}
-              </td>
-              <td className="min-w-64 p-3">{t(th, en)}</td>
-            </tr>
           ))}
-        </tbody>
-      </table>
-    </div>
+        </tr>
+      </thead>
+      <tbody role="rowgroup" className="max-md:block">
+        {rows.map(([name, type, def, th, en]) => (
+          <tr
+            key={name}
+            role="row"
+            className="align-top max-md:block max-md:border-b max-md:py-3.5"
+          >
+            <th
+              role="rowheader"
+              scope="row"
+              className={cn(
+                cell,
+                "font-mono text-[13px] font-normal max-md:p-0 max-md:text-sm max-md:font-medium",
+                !name.includes(",") && "whitespace-nowrap"
+              )}
+            >
+              {name}
+            </th>
+            <td
+              role="cell"
+              className={cn(
+                cell,
+                "font-mono text-[12.5px] text-muted-foreground max-md:py-0.5"
+              )}
+            >
+              {type}
+            </td>
+            <td role="cell" className={cn(cell, "pr-0 max-md:py-0.5")}>
+              {t(th, en)}
+              <span className="mt-1 block font-mono text-[12.5px] text-muted-foreground">
+                {t("ค่าเริ่มต้น", "default")} {def}
+              </span>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   )
 }
 
@@ -268,11 +293,11 @@ export function CoreReferencePage() {
     >
       <CodeBlock label="TypeScript" code={CORE_EXAMPLE} />
       <Section title="API">
-        <ul className="flex flex-col divide-y rounded-xl border text-sm">
+        <ul className="flex flex-col divide-y border-b text-sm">
           {CORE_API.map(([sig, th, en]) => (
             <li
               key={sig}
-              className="flex flex-col gap-0.5 p-3 sm:flex-row sm:gap-4"
+              className="flex flex-col gap-0.5 py-3 sm:flex-row sm:gap-4"
             >
               <code className="shrink-0 font-mono sm:w-72">{sig}</code>
               <span className="text-muted-foreground">{t(th, en)}</span>

@@ -6,7 +6,6 @@ export const NAV: NavGroup[] = [
     th: "เริ่มต้น",
     en: "Getting started",
     items: [
-      { href: "/", th: "ภาพรวม", en: "Overview" },
       { href: "/docs/installation", th: "ติดตั้ง", en: "Installation" },
       { href: "/docs/dataset", th: "ชุดข้อมูล", en: "Dataset" },
     ],
@@ -70,3 +69,22 @@ export const NAV: NavGroup[] = [
     ],
   },
 ]
+
+/** The docs pages in reading order: every sidebar link except llms.txt. */
+export const PAGES: NavItem[] = NAV.flatMap((g) => g.items).filter(
+  (i) => !i.href.endsWith(".txt")
+)
+
+/** The pages before and after `path` in reading order. */
+export function neighbours(path: string): {
+  prev: NavItem | null
+  next: NavItem | null
+} {
+  const i = PAGES.findIndex((p) => p.href === path)
+  if (i < 0) return { prev: null, next: null }
+  return { prev: PAGES[i - 1] ?? null, next: PAGES[i + 1] ?? null }
+}
+
+/** The sidebar group `path` belongs to, if it is a docs page. */
+export const groupOf = (path: string): NavGroup | undefined =>
+  NAV.find((g) => g.items.some((i) => i.href === path))

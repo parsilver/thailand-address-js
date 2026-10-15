@@ -3,7 +3,7 @@ url: ${BASE}
 name: postal-83100
 ---
 - openLink: ${BASE}/examples/postal-first
-- extendedWaitUntil: { visible: "พิมพ์ 5 หลัก ระบบจะเติมที่อยู่ให้", timeout: 20000 }
+- scrollUntilVisible: { element: "พิมพ์ 5 หลัก ระบบจะเติมที่อยู่ให้", timeout: 20000, centerElement: true }
 - tapOn: "เช่น 10200"
 - inputText: "83100"
 - extendedWaitUntil:
