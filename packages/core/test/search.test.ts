@@ -14,11 +14,11 @@ const id = (h: SearchHit) =>
 const codes = (hits: SearchHit[]) => hits.map((h) => id(h).replace(/^sub:/, ''))
 
 describe('search', () => {
-  it('"บางรัก": exact subdistrict names first, then khet Bang Rak itself, then names that start with it', async () => {
+  it('"บางรัก": exact-name ties go to the higher level, so khet Bang Rak first, then the exact khwaeng and tambon, then prefixes', async () => {
     const { ta } = client()
     const r = await ta.search('บางรัก')
     if (r.status !== 'ok') throw new Error(r.status)
-    expect(r.hits.slice(0, 4).map(id)).toEqual(['sub:100404:10500', 'sub:100404:10501', 'sub:920109:92000', 'district:1004'])
+    expect(r.hits.slice(0, 4).map(id)).toEqual(['district:1004', 'sub:100404:10500', 'sub:100404:10501', 'sub:920109:92000'])
     expect(r.hits.slice(4).every((h) => h.level === 'subdistrict' && h.subdistrict.name.th.startsWith('บางรัก'))).toBe(true)
   })
 
@@ -26,7 +26,7 @@ describe('search', () => {
     const { ta } = client()
     const r = await ta.search('bang rak')
     if (r.status !== 'ok') throw new Error(r.status)
-    expect(r.hits.slice(0, 4).map(id)).toEqual(['sub:100404:10500', 'sub:100404:10501', 'sub:920109:92000', 'district:1004'])
+    expect(r.hits.slice(0, 4).map(id)).toEqual(['district:1004', 'sub:100404:10500', 'sub:100404:10501', 'sub:920109:92000'])
     expect(r.hits.some((h) => h.province.code === '11')).toBe(false)
   })
 
@@ -52,6 +52,14 @@ describe('search', () => {
     expect(id(p.hits[0]!)).toBe('province:16')
   })
 
+  it('below an exact match, the more specific level still comes first', async () => {
+    const { ta } = client()
+    const r = await ta.search('บางรั')
+    if (r.status !== 'ok') throw new Error(r.status)
+    const levels = r.hits.map((h) => h.level)
+    expect(levels.indexOf('subdistrict')).toBeLessThan(levels.indexOf('district'))
+  })
+
   it('a multi-word query scores by its weakest word', async () => {
     const { ta } = client()
     const r = await ta.search('karon phuket')
@@ -67,7 +75,7 @@ describe('search', () => {
     expect(codes(r.hits)).toEqual(['830108:83100'])
     const spaced = await ta.search('bangrak')
     if (spaced.status !== 'ok') throw new Error(spaced.status)
-    expect(id(spaced.hits[0]!)).toBe('sub:100404:10500')
+    expect(spaced.hits.slice(0, 2).map(id)).toEqual(['district:1004', 'sub:100404:10500'])
   })
 
   it('ignores the administrative prefixes', async () => {
