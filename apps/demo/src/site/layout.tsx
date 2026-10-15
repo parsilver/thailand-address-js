@@ -31,7 +31,7 @@ function useTheme() {
     const next = !dark
     setDark(next)
     document.documentElement.classList.toggle("dark", next)
-    localStorage.setItem("thailand-address-demo:theme", next ? "dark" : "light")
+    localStorage.setItem("thailand-address:theme", next ? "dark" : "light")
   }
   return { dark, toggle }
 }

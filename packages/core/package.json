@@ -1,6 +1,6 @@
 {
   "name": "@farzai/thailand-address",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Lazy, typed lookups for the Thai address dataset (provinces, districts, subdistricts, postal codes) at data.farzai.com",
   "license": "MIT",
   "type": "module",
@@ -10,7 +10,7 @@
     "url": "git+https://github.com/parsilver/thailand-address-js.git",
     "directory": "packages/core"
   },
-  "homepage": "https://thailand-address-demo.farzai.com",
+  "homepage": "https://thailand-address.farzai.com",
   "keywords": [
     "thailand",
     "address",

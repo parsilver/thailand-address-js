@@ -3,7 +3,7 @@
 A Thai address as four codes: `province_code`, `district_code`, `subdistrict_code` and `postal_code`. The user types the postal code and the rest fills in. Every case in [issue #1](https://github.com/parsilver/thailand-address-js/issues/1) and its design brief is covered.
 
 ```sh
-npx shadcn@latest add https://thailand-address-demo.farzai.com/r/address-form.json
+npx shadcn@latest add https://thailand-address.farzai.com/r/address-form.json
 ```
 
 The install brings in `@farzai/thailand-address` from npm. It also adds these shadcn components: `field`, `label`, `input`, `button`, `popover`, `command`, `drawer`, `radio-group`, `toggle-group`, `checkbox` and `alert`.

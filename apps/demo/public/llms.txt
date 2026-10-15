@@ -2,14 +2,14 @@
 
 A shadcn/ui component and a TypeScript package for Thai addresses. The user types a postal code and the province, district and subdistrict fill in. The output is four codes, not names: province_code, district_code, subdistrict_code, postal_code.
 
-- Demo and docs: https://thailand-address-demo.farzai.com
-- Registry item: https://thailand-address-demo.farzai.com/r/address-form.json
+- Demo and docs: https://thailand-address.farzai.com
+- Registry item: https://thailand-address.farzai.com/r/address-form.json
 - Source: https://github.com/parsilver/thailand-address-js
 - Dataset contract: https://data.farzai.com/thailand-address/llms-full.txt
 
 ## Install
 
-    npx shadcn@latest add https://thailand-address-demo.farzai.com/r/address-form.json
+    npx shadcn@latest add https://thailand-address.farzai.com/r/address-form.json
 
 This copies the files into components/address-form/ and installs @farzai/thailand-address (npm).
 

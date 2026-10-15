@@ -19,7 +19,7 @@ function open(path: string) {
 }
 
 beforeEach(() => {
-  localStorage.setItem("thailand-address-demo:locale", "th")
+  localStorage.setItem("thailand-address:locale", "th")
 })
 
 describe("every docs page renders its title and marks itself in the sidebar", () => {
@@ -47,7 +47,7 @@ describe("home", () => {
     ).toBeInTheDocument()
     const install = screen.getByLabelText("คำสั่งติดตั้ง")
     expect(install).toHaveTextContent(
-      "npx shadcn@latest add https://thailand-address-demo.farzai.com/r/address-form.json"
+      "npx shadcn@latest add https://thailand-address.farzai.com/r/address-form.json"
     )
     expect(
       within(install.parentElement!).getByRole("button", { name: "คัดลอก" })

@@ -1,6 +1,6 @@
 # apps/demo
 
-The demo, docs and shadcn registry host at https://thailand-address-demo.farzai.com. It's a Vite + React app served as Cloudflare Workers static assets, with no Worker script.
+The demo, docs and shadcn registry host at https://thailand-address.farzai.com. It's a Vite + React app served as Cloudflare Workers static assets, with no Worker script.
 
 - It builds the registry item from `../../registry/src/registry` the way an install would, through the `@/registry/*` alias.
 - `scripts/copy-registry.mjs` copies the built `registry/public/r/*.json` into `public/r`, so the install URL is `/r/address-form.json`.
@@ -21,4 +21,4 @@ pnpm --filter @thailand-address/demo exec wrangler dev     # dist/ with _headers
 pnpm --filter @thailand-address/demo deploy     # pnpm build && wrangler deploy
 ```
 
-`wrangler.jsonc` deploys the Worker `thailand-address-demo` with the custom domain `thailand-address-demo.farzai.com`. Never use `thailand-address.farzai.com`, which is reserved. To roll back, run `wrangler rollback` or pick the previous deployment in the dashboard.
+`wrangler.jsonc` deploys the Worker `thailand-address-demo` with the custom domain `thailand-address.farzai.com`. The old host, `thailand-address-demo.farzai.com`, stays attached as a second custom domain, so its DNS record and certificate remain. A Cloudflare Single Redirect rule on the zone sends it to the new host with a 301, keeping the path and query. The old install URL `npx shadcn@latest add https://thailand-address-demo.farzai.com/r/address-form.json` therefore keeps working: the shadcn CLI follows the redirect. Don't remove the old custom domain while that rule exists, because the rule needs the hostname to resolve. To roll back, run `wrangler rollback` or pick the previous deployment in the dashboard.

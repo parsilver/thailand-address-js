@@ -2,7 +2,10 @@
 // (scripts/route-pages.mjs), so unknown paths get a real 404 from 404.html.
 // Personal Lead deploys with
 // `pnpm --filter @thailand-address/demo deploy` (wrangler deploy).
-// Never point this at thailand-address.farzai.com, which is reserved.
+// thailand-address.farzai.com is the site. thailand-address-demo.farzai.com
+// stays attached as a second custom domain so its DNS record and certificate
+// remain; a Cloudflare Single Redirect rule on the zone 301s it to the new
+// host with path and query, so the old install URL keeps working.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "thailand-address-demo",
@@ -12,5 +15,8 @@
     "not_found_handling": "404-page",
     "html_handling": "drop-trailing-slash"
   },
-  "routes": [{ "pattern": "thailand-address-demo.farzai.com", "custom_domain": true }]
+  "routes": [
+    { "pattern": "thailand-address.farzai.com", "custom_domain": true },
+    { "pattern": "thailand-address-demo.farzai.com", "custom_domain": true }
+  ]
 }
