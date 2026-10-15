@@ -1,7 +1,7 @@
 {
   "$schema": "https://ui.shadcn.com/schema/registry.json",
   "name": "thailand-address",
-  "homepage": "https://thailand-address-demo.farzai.com",
+  "homepage": "https://thailand-address.farzai.com",
   "items": [
     {
       "name": "address-form",
@@ -77,7 +77,7 @@
           "target": "components/address-form/use-media-query.ts"
         }
       ],
-      "docs": "Use <AddressForm name=\"shipping\" value={value} onChange={setValue} />. Docs and examples: https://thailand-address-demo.farzai.com",
+      "docs": "Use <AddressForm name=\"shipping\" value={value} onChange={setValue} />. Docs and examples: https://thailand-address.farzai.com",
       "categories": [
         "form",
         "address",

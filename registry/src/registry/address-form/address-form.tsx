@@ -122,7 +122,7 @@ function useLoad<T>(key: string | null, load: () => Promise<T>) {
  * A Thai address as four codes: province, district, subdistrict and postal
  * code. The postal code comes first by default and fills in the rest; every
  * other field confirms or corrects it. Data is lazy-loaded from the pinned
- * dataset snapshot. See https://thailand-address-demo.farzai.com.
+ * dataset snapshot. See https://thailand-address.farzai.com.
  */
 export function AddressForm({
   name,

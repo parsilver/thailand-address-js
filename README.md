@@ -6,7 +6,7 @@ The frontend for the [Thai address dataset](https://data.farzai.com/thailand-add
 |---|---|
 | [`packages/core`](packages/core) | `@farzai/thailand-address`, typed lazy lookups (npm) |
 | [`registry`](registry) | the shadcn/ui `address-form` registry item |
-| [`apps/demo`](apps/demo) | demo, docs and registry host at https://thailand-address-demo.farzai.com |
+| [`apps/demo`](apps/demo) | demo, docs and registry host at https://thailand-address.farzai.com |
 
 ## Develop
 

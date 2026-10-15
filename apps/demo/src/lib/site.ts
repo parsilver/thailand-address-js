@@ -1,6 +1,6 @@
 import { SNAPSHOT } from "@farzai/thailand-address"
 
-export const SITE_URL = "https://thailand-address-demo.farzai.com"
+export const SITE_URL = "https://thailand-address.farzai.com"
 export const INSTALL = `npx shadcn@latest add ${SITE_URL}/r/address-form.json`
 export const REPO = "https://github.com/parsilver/thailand-address-js"
 export const DATA_BASE = `https://data.farzai.com/thailand-address/v1/${SNAPSHOT}`

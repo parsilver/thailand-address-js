@@ -2,7 +2,7 @@ import * as React from "react"
 
 import type { Locale } from "@/registry/address-form/address-form-copy"
 
-const KEY = "thailand-address-demo:locale"
+const KEY = "thailand-address:locale"
 const LocaleContext = React.createContext<{
   locale: Locale
   setLocale: (l: Locale) => void
