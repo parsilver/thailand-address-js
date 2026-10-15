@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>Thai address form: design prototype (parsilver/thailand-address-js#1)</title>
+<!--
+  Static design prototype. Not production code.
+  Open with ?screen=<id>&lang=th|en. Screen ids are listed in SCREENS at the bottom.
+  Styling copies shadcn/ui defaults (new-york style, neutral base, CSS variables) so the
+  component reads as native in any shadcn app. Place names come from the current
+  farzai/thailand-address PHP data; the dataset snapshot is not published yet.
+-->
+<style>
+  :root {
+    --background: oklch(1 0 0); --foreground: oklch(0.145 0 0);
+    --card: oklch(1 0 0); --popover: oklch(1 0 0);
+    --primary: oklch(0.205 0 0); --primary-foreground: oklch(0.985 0 0);
+    --muted: oklch(0.97 0 0); --muted-foreground: oklch(0.556 0 0);
+    --accent: oklch(0.97 0 0); --border: oklch(0.922 0 0); --input: oklch(0.922 0 0);
+    --ring: oklch(0.708 0 0); --destructive: oklch(0.577 0.245 27.325);
+    --radius: 0.625rem;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Geist, Inter, "Noto Sans Thai", Thonburi, -apple-system, sans-serif; color: var(--foreground); background: oklch(0.985 0 0); font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  .wrap { padding: 32px; display: grid; grid-template-columns: repeat(auto-fill, minmax(560px, 1fr)); gap: 28px; align-items: start; }
+  .frame { position: relative; }
+  .ftitle { font-size: 12px; font-weight: 600; color: oklch(0.45 0.12 252); letter-spacing: .02em; margin-bottom: 8px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: calc(var(--radius) + 4px); padding: 24px; box-shadow: 0 1px 2px rgb(0 0 0 / .04); }
+  fieldset { border: 0; display: grid; gap: 16px; }
+  legend { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .field { display: grid; gap: 6px; position: relative; align-content: start; }
+  label, .label { font-size: 14px; font-weight: 500; line-height: 1; }
+  .desc { font-size: 13px; color: var(--muted-foreground); }
+  .input, .trigger { height: 36px; width: 100%; border: 1px solid var(--input); border-radius: calc(var(--radius) - 2px); background: transparent; padding: 0 12px; font: inherit; font-size: 14px; display: flex; align-items: center; justify-content: space-between; gap: 8px; box-shadow: 0 1px 2px rgb(0 0 0 / .05); color: var(--foreground); }
+  .input.ph, .trigger.ph { color: var(--muted-foreground); }
+  .focus { border-color: var(--ring); box-shadow: 0 0 0 3px oklch(0.708 0 0 / .5); }
+  .invalid { border-color: var(--destructive); box-shadow: 0 0 0 3px oklch(0.577 0.245 27.325 / .2); }
+  .disabled { opacity: .5; }
+  .filled { background: oklch(0.985 0 0); }
+  .chev { color: var(--muted-foreground); font-size: 11px; }
+  .w-postal { width: 132px; }
+  .spin { width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--foreground); border-radius: 50%; }
+  .note { font-size: 13px; color: var(--muted-foreground); display: flex; gap: 6px; align-items: baseline; }
+  .note b { color: var(--foreground); font-weight: 500; }
+  .link { font-size: 13px; font-weight: 500; text-decoration: underline; text-underline-offset: 3px; color: var(--foreground); background: none; border: 0; cursor: pointer; font-family: inherit; padding: 0; }
+  .alert { border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; display: grid; grid-template-columns: 16px 1fr; gap: 2px 10px; font-size: 13px; }
+  .alert .t { font-weight: 500; font-size: 14px; grid-column: 2; }
+  .alert .b { color: var(--muted-foreground); grid-column: 2; }
+  .alert .i { grid-row: 1 / span 2; font-weight: 700; }
+  .alert.destructive { color: var(--destructive); border-color: oklch(0.577 0.245 27.325 / .4); }
+  .alert.destructive .b { color: oklch(0.577 0.245 27.325 / .85); }
+  .pop { position: absolute; z-index: 3; left: 0; right: 0; top: calc(100% + 4px); background: var(--popover); border: 1px solid var(--border); border-radius: calc(var(--radius) - 2px); box-shadow: 0 8px 24px rgb(0 0 0 / .1); overflow: hidden; }
+  .pop .search { height: 36px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; padding: 0 12px; color: var(--muted-foreground); font-size: 14px; }
+  .pop .grp { font-size: 12px; font-weight: 500; color: var(--muted-foreground); padding: 8px 10px 4px; }
+  .pop ul { list-style: none; padding: 4px; max-height: 260px; overflow: hidden; }
+  .pop li { padding: 6px 8px; border-radius: 6px; font-size: 14px; display: flex; justify-content: space-between; gap: 12px; }
+  .pop li.on { background: var(--accent); }
+  .pop li small { color: var(--muted-foreground); font-size: 12px; }
+  .pop li mark { background: none; font-weight: 600; color: inherit; }
+  .pop .empty { padding: 20px 12px; text-align: center; font-size: 13px; color: var(--muted-foreground); }
+  .radios { display: grid; gap: 8px; }
+  .radio { display: flex; gap: 10px; align-items: flex-start; border: 1px solid var(--border); border-radius: calc(var(--radius) - 2px); padding: 10px 12px; font-size: 14px; }
+  .radio .dot { width: 16px; height: 16px; border-radius: 50%; border: 1px solid var(--input); margin-top: 2px; flex: none; box-shadow: 0 1px 2px rgb(0 0 0 / .05); }
+  .radio.on { border-color: var(--primary); }
+  .radio.on .dot { border-color: var(--primary); background: radial-gradient(circle, var(--primary) 0 3.5px, transparent 4px); }
+  .radio small { display: block; color: var(--muted-foreground); font-size: 13px; }
+  .radio.kb { box-shadow: 0 0 0 3px oklch(0.708 0 0 / .5); }
+  .seg { display: inline-flex; border: 1px solid var(--input); border-radius: calc(var(--radius) - 2px); overflow: hidden; height: 32px; }
+  .seg span { padding: 0 12px; display: flex; align-items: center; font-size: 13px; border-right: 1px solid var(--input); }
+  .seg span:last-child { border-right: 0; }
+  .seg span.on { background: var(--accent); font-weight: 500; }
+  .check { display: flex; gap: 8px; align-items: center; font-size: 14px; font-weight: 500; }
+  .box { width: 16px; height: 16px; border-radius: 4px; border: 1px solid var(--primary); background: var(--primary); color: var(--primary-foreground); font-size: 11px; display: flex; align-items: center; justify-content: center; }
+  .box.off { background: transparent; border-color: var(--input); }
+  .summary { border: 1px dashed var(--border); border-radius: calc(var(--radius) - 2px); padding: 12px; font-size: 14px; color: var(--muted-foreground); }
+  .host { outline: 1px dashed oklch(0.75 0.15 300); outline-offset: 3px; }
+  .live { font: 12px/1.4 Menlo, monospace; background: oklch(0.96 0.02 252); color: oklch(0.35 0.1 252); border-radius: 6px; padding: 6px 8px; }
+  .live::before { content: "aria-live: "; font-weight: 700; }
+  .an { font: 11px/1.35 Menlo, monospace; background: #c026d3; color: #fff; padding: 4px 6px; border-radius: 4px; display: inline-block; max-width: 100%; }
+  pre { white-space: pre-wrap; word-break: break-all; font: 12px/1.55 "Geist Mono", Menlo, monospace; background: oklch(0.205 0 0); color: oklch(0.92 0 0); border-radius: var(--radius); padding: 14px 16px; overflow: hidden; }
+  pre .k { color: oklch(0.8 0.1 250); } pre .s { color: oklch(0.82 0.12 150); } pre .c { color: oklch(0.6 0 0); }
+  .row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
+  .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+  /* mobile */
+  .phone { width: 390px; border: 1px solid var(--border); border-radius: 28px; overflow: hidden; background: var(--background); position: relative; height: 760px; }
+  .phone .bar { height: 44px; }
+  .drawer { position: absolute; left: 0; right: 0; bottom: 0; background: var(--background); border-top-left-radius: 14px; border-top-right-radius: 14px; border-top: 1px solid var(--border); box-shadow: 0 -8px 30px rgb(0 0 0 / .15); }
+  .drawer .handle { width: 48px; height: 5px; border-radius: 3px; background: var(--muted); margin: 8px auto 12px; }
+  .drawer li { min-height: 48px; align-items: center; }
+  .kbd { height: 220px; background: oklch(0.88 0 0); display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 8px; }
+  .kbd span { background: #fff; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+  /* demo site */
+  .site { display: grid; grid-template-columns: 220px 1fr; min-height: 900px; background: var(--background); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; width: 1360px; }
+  .site nav { border-right: 1px solid var(--border); padding: 20px 16px; font-size: 13px; }
+  .site nav h4 { font-size: 12px; font-weight: 600; margin: 16px 0 6px; }
+  .site nav a { display: block; padding: 4px 8px; border-radius: 6px; color: var(--muted-foreground); text-decoration: none; }
+  .site nav a.on { background: var(--accent); color: var(--foreground); font-weight: 500; }
+  .site main { padding: 28px 40px; }
+  .tabs { display: inline-flex; background: var(--muted); border-radius: var(--radius); padding: 3px; gap: 2px; }
+  .tabs span { padding: 4px 12px; border-radius: calc(var(--radius) - 4px); font-size: 13px; color: var(--muted-foreground); }
+  .tabs span.on { background: var(--background); color: var(--foreground); font-weight: 500; box-shadow: 0 1px 2px rgb(0 0 0 / .06); }
+  .btn { height: 36px; padding: 0 16px; border-radius: calc(var(--radius) - 2px); background: var(--primary); color: var(--primary-foreground); font: inherit; font-size: 14px; font-weight: 500; border: 0; display: inline-flex; align-items: center; }
+  .btn.outline { background: var(--background); color: var(--foreground); border: 1px solid var(--input); }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const q = new URLSearchParams(location.search);
+const L = q.get('lang') === 'en' ? 'en' : 'th';
+const screen = q.get('screen') || 'postal';
+document.documentElement.lang = L;
+
+// ---------- Copy table (mirrored in ../copy.md) ----------
+const T = {
+  th: {
+    legendShip: 'ที่อยู่จัดส่ง', legendTax: 'ที่อยู่ใบกำกับภาษี',
+    postal: 'รหัสไปรษณีย์', postalPh: 'เช่น 10200', postalDesc: 'พิมพ์ 5 หลัก ระบบจะเติมที่อยู่ให้',
+    province: 'จังหวัด', provincePh: 'เลือกจังหวัด',
+    district: 'อำเภอ/เขต', districtPh: 'เลือกอำเภอ/เขต', amphoe: 'อำเภอ', khet: 'เขต',
+    subdistrict: 'ตำบล/แขวง', subdistrictPh: 'เลือกตำบล/แขวง', tambon: 'ตำบล', khwaeng: 'แขวง',
+    chooseProvinceFirst: 'เลือกจังหวัดก่อน', chooseDistrictFirst: (k) => `เลือก${k}ก่อน`,
+    searchHere: (k) => `ค้นหา${k}…`,
+    autofilled: (pc) => `เติมจากรหัสไปรษณีย์ ${pc}`, undo: 'ล้าง',
+    pickOne: (pc, n, k) => `รหัส ${pc} ใช้ได้ ${n} ${k} เลือก${k}ของคุณ`,
+    pickArea: (pc, n) => `รหัส ${pc} ใช้ได้ ${n} พื้นที่ใน 2 จังหวัด เลือกพื้นที่ของคุณ`,
+    facilityTitle: (pc) => `${pc} เป็นรหัสไปรษณีย์ของหน่วยงาน`,
+    facilityBody: (note) => `${note} ใช้กับที่อยู่ทั่วไปไม่ได้ ตรวจรหัสอีกครั้ง หรือเลือกพื้นที่ด้านล่าง`,
+    facilityUse: 'ใช้รหัสนี้ต่อ',
+    notFoundTitle: (pc) => `ไม่พบรหัสไปรษณีย์ ${pc}`,
+    notFoundBody: 'ตรวจตัวเลขอีกครั้ง หรือเลือกจังหวัด อำเภอ และตำบลด้านล่างได้เลย',
+    postalForArea: 'รหัสไปรษณีย์ของพื้นที่นี้',
+    postalChoice: (n) => `พื้นที่นี้มีรหัสไปรษณีย์ ${n} รหัส เลือกรหัสที่ใช้กับที่อยู่ของคุณ`,
+    search: 'ค้นหาที่อยู่', searchPh: 'พิมพ์ตำบล อำเภอ จังหวัด หรือรหัสไปรษณีย์',
+    searchDesc: 'พิมพ์ไทยหรืออังกฤษก็ได้ ไม่ต้องพิมพ์ ต./อ./จ.',
+    searchMore: 'พิมพ์เพิ่มเพื่อให้ผลแคบลง',
+    searchEmpty: (s) => `ไม่พบ “${s}”`, searchEmptyBody: 'ลองพิมพ์ชื่ออำเภอ ชื่อจังหวัด หรือรหัสไปรษณีย์ หรือกรอกเองด้านล่าง',
+    fillManually: 'กรอกเอง',
+    sameAs: 'ใช้ที่อยู่เดียวกับที่อยู่จัดส่ง',
+    sameAsDesc: 'เลิกเลือกเพื่อกรอกที่อยู่ใบกำกับภาษีแยก ระบบจะคัดลอกที่อยู่จัดส่งมาให้แก้ต่อ',
+    loading: 'กำลังโหลดข้อมูลที่อยู่…',
+    errorTitle: 'โหลดข้อมูลที่อยู่ไม่สำเร็จ', errorBody: 'ตรวจการเชื่อมต่อแล้วลองอีกครั้ง ข้อมูลที่กรอกไว้ยังอยู่ครบ', retry: 'ลองอีกครั้ง',
+    errMismatch: 'รหัสไปรษณีย์นี้ไม่ตรงกับตำบล/แขวงที่เลือก', errRequired: (f) => `กรุณาเลือก${f}`,
+    line: 'บ้านเลขที่ ถนน ซอย', hostField: 'ช่องของแอปผู้ใช้ ไม่ใช่ส่วนของคอมโพเนนต์',
+    showFacility: 'แสดงรหัสไปรษณีย์ของหน่วยงาน',
+    pick: (k) => `เลือก${k}`,
+  },
+  en: {
+    legendShip: 'Shipping address', legendTax: 'Tax invoice address',
+    postal: 'Postal code', postalPh: 'e.g. 10200', postalDesc: 'Type 5 digits and we fill in the rest',
+    province: 'Province', provincePh: 'Select province',
+    district: 'District', districtPh: 'Select district', amphoe: 'District', khet: 'District (khet)',
+    subdistrict: 'Subdistrict', subdistrictPh: 'Select subdistrict', tambon: 'Subdistrict', khwaeng: 'Subdistrict (khwaeng)',
+    chooseProvinceFirst: 'Select a province first', chooseDistrictFirst: () => 'Select a district first',
+    searchHere: (k) => `Search ${k.toLowerCase()}…`,
+    autofilled: (pc) => `Filled from postal code ${pc}`, undo: 'Clear',
+    pickOne: (pc, n) => `${pc} covers ${n} subdistricts. Pick yours.`,
+    pickArea: (pc, n) => `${pc} covers ${n} areas in 2 provinces. Pick yours.`,
+    facilityTitle: (pc) => `${pc} is a facility postal code`,
+    facilityBody: (note) => `${note}. It isn't used for ordinary addresses. Check the code, or pick the area below.`,
+    facilityUse: 'Use this code anyway',
+    notFoundTitle: (pc) => `No postal code ${pc}`,
+    notFoundBody: 'Check the digits, or pick the province, district and subdistrict below.',
+    postalForArea: 'Postal code for this area',
+    postalChoice: (n) => `This area has ${n} postal codes. Pick the one for your address.`,
+    search: 'Find your address', searchPh: 'Type a subdistrict, district, province or postal code',
+    searchDesc: 'Thai or English. No need to type ต./อ./จ.',
+    searchMore: 'Keep typing to narrow the list',
+    searchEmpty: (s) => `No match for “${s}”`, searchEmptyBody: 'Try a district, a province or a postal code, or fill the fields below yourself.',
+    fillManually: 'Fill in manually',
+    sameAs: 'Same as shipping address',
+    sameAsDesc: 'Untick to enter a separate tax invoice address. We copy the shipping address in for you to edit.',
+    loading: 'Loading address data…',
+    errorTitle: "Couldn't load address data", errorBody: 'Check your connection and try again. What you entered is kept.', retry: 'Try again',
+    errMismatch: "This postal code doesn't serve the selected subdistrict", errRequired: (f) => `Select a ${f.toLowerCase()}`,
+    line: 'House no., street, soi', hostField: "Host app's own field, not part of the component",
+    showFacility: 'Show facility postal codes',
+    pick: (k) => `Select ${k.replace(/ \(.*\)/,'').toLowerCase()}`,
+  },
+}[L];
+
+// ---------- Example data (real names from farzai/thailand-address 2.x data) ----------
+const N = (th, en) => (L === 'th' ? th : en);
+const BKK = N('กรุงเทพมหานคร', 'Bangkok');
+const KHWAENG_10200 = [
+  ['100101','พระบรมมหาราชวัง','Phra Borom Maha Ratchawang'],['100102','วังบูรพาภิรมย์','Wang Burapha Phirom'],
+  ['100103','วัดราชบพิธ','Wat Ratchabophit'],['100104','สำราญราษฎร์','Samran Rat'],['100105','ศาลเจ้าพ่อเสือ','San Chao Pho Suea'],
+  ['100106','เสาชิงช้า','Sao Chingcha'],['100107','บวรนิเวศ','Bowon Niwet'],['100108','ตลาดยอด','Talat Yot'],
+  ['100109','ชนะสงคราม','Chana Songkhram'],['100110','บ้านพานถม','Ban Phan Thom'],['100111','บางขุนพรหม','Bang Khun Phrom'],['100112','วัดสามพระยา','Wat Sam Phraya'],
+];
+const AREAS_13240 = [
+  [N('บ้านแพรก','Ban Phraek'), N('อ.บ้านแพรก','Ban Phraek'), N('พระนครศรีอยุธยา','Phra Nakhon Si Ayutthaya')],
+  [N('บ้านใหม่','Ban Mai'), N('อ.บ้านแพรก','Ban Phraek'), N('พระนครศรีอยุธยา','Phra Nakhon Si Ayutthaya')],
+  [N('สำพะเนียง','Sam Phaniang'), N('อ.บ้านแพรก','Ban Phraek'), N('พระนครศรีอยุธยา','Phra Nakhon Si Ayutthaya')],
+  [N('คลองน้อย','Khlong Noi'), N('อ.บ้านแพรก','Ban Phraek'), N('พระนครศรีอยุธยา','Phra Nakhon Si Ayutthaya')],
+  [N('สองห้อง','Song Hong'), N('อ.บ้านแพรก','Ban Phraek'), N('พระนครศรีอยุธยา','Phra Nakhon Si Ayutthaya')],
+  [N('โก่งธนู','Kong Thanu'), N('อ.เมืองลพบุรี','Mueang Lop Buri'), N('ลพบุรี','Lop Buri')],
+];
+
+// ---------- Building blocks ----------
+const input = (val, cls = '', extra = '') => `<div class="input ${val ? '' : 'ph'} ${cls}">${val || extra}</div>`;
+const trigger = (val, ph, cls = '') => `<div class="trigger ${val ? '' : 'ph'} ${cls}"><span>${val || ph}</span><span class="chev">▾</span></div>`;
+function field(id, label, control, opts = {}) {
+  return `<div class="field">${opts.ann ? `<span class="an">${opts.ann}</span>` : ''}<label for="${id}">${label}</label>${control}${opts.desc ? `<p class="desc">${opts.desc}</p>` : ''}${opts.err ? `<p class="desc" style="color:var(--destructive)">${opts.err}</p>` : ''}${opts.pop || ''}</div>`;
+}
+function postalRow(val, opts = {}) {
+  const inner = val ? `<span class="num">${val}</span>${opts.spin ? '<span class="spin"></span>' : ''}` : '';
+  return `<div class="field"><label for="postal">${T.postal}</label>
+    <div class="row"><div class="w-postal">${val ? `<div class="input ${opts.cls || ''}">${inner}</div>` : `<div class="input ph ${opts.cls || ''}">${T.postalPh}</div>`}</div>
+    ${opts.note || ''}</div>${opts.desc === false ? '' : `<p class="desc">${opts.descText || T.postalDesc}</p>`}</div>`;
+}
+const areaGrid = (p, d, s, o = {}) => `<div class="grid3">
+  ${field('province', T.province, trigger(p, T.provincePh, o.pc || (p ? 'filled' : '')), { pop: o.ppop })}
+  ${field('district', o.dl || T.district, trigger(d, o.dl ? T.pick(o.dl) : T.districtPh, (o.dc || '') + (d ? ' filled' : '') + (p ? '' : ' disabled')), { desc: p ? '' : T.chooseProvinceFirst, pop: o.dpop })}
+  ${field('subdistrict', o.sl || T.subdistrict, trigger(s, o.sl ? T.pick(o.sl) : T.subdistrictPh, (o.sc || '') + (s ? ' filled' : '') + (d ? '' : ' disabled')), { desc: d ? (o.sdesc || '') : (o.sdisabledDesc ?? T.chooseDistrictFirst(o.dl || T.district)), err: o.serr, pop: o.spop })}
+</div>`;
+const legend = (t) => `<legend>${t}</legend>`;
+const card = (inner) => `<div class="card"><fieldset>${inner}</fieldset></div>`;
+const frame = (title, inner, style = '') => `<section class="frame" style="${style}"><div class="ftitle">${title}</div>${inner}</section>`;
+const live = (t) => `<div class="live">${t}</div>`;
+
+// ---------- Screens ----------
+const S = {};
+
+S.postal = () => `<div class="wrap">
+  ${frame('1a · ' + N('ว่าง: เริ่มที่รหัสไปรษณีย์', 'Empty: postal code first'), card(legend(T.legendShip) + postalRow('') + areaGrid('', '', '', { dl: T.district, sl: T.subdistrict })))}
+  ${frame('1b · ' + N('รหัสเดียว ตำบลเดียว: เติมให้ครบ (83100)', 'One subdistrict: autofill all (83100)'), card(legend(T.legendShip)
+    + postalRow('83100', { cls: 'focus', note: `<p class="note">✓ <span>${T.autofilled('83100')}</span><button class="link">${T.undo}</button></p>`, desc: false })
+    + areaGrid(N('ภูเก็ต','Phuket'), N('เมืองภูเก็ต','Mueang Phuket'), N('กะรน','Karon'), { dl: T.amphoe, sl: T.tambon })
+    + live(N('เติมที่อยู่แล้ว: ตำบลกะรน อำเภอเมืองภูเก็ต จังหวัดภูเก็ต', 'Address filled: Karon, Mueang Phuket, Phuket'))))}
+  ${frame('1c · ' + N('หลายแขวงในเขตเดียว: เติมจังหวัดและเขต แล้วเลือกแขวง (10200, 12 แขวง)', 'Several subdistricts, one district: fill province and district, pick subdistrict (10200)'), card(legend(T.legendShip)
+    + postalRow('10200', { desc: false, note: `<p class="note">${T.autofilled('10200')}</p>` })
+    + areaGrid(BKK, N('พระนคร','Phra Nakhon'), '', { dl: T.khet, sl: T.khwaeng, sc: 'focus', sdesc: T.pickOne('10200', 12, T.khwaeng),
+        spop: `<div class="pop" role="listbox"><div class="search">⌕ ${T.searchHere(T.khwaeng)}</div><div class="grp">10200 · ${N('เขตพระนคร','Phra Nakhon')}</div><ul>${KHWAENG_10200.slice(0, 7).map((k, i) => `<li class="${i === 0 ? 'on' : ''}">${N(k[1], k[2])}</li>`).join('')}<li><small>+5</small></li></ul></div>` })
+    + live(N('รหัส 10200 ใช้ได้ 12 แขวงในเขตพระนคร เลือกแขวง', '10200 covers 12 subdistricts in Phra Nakhon. Pick yours.')) + `<div style="height:250px"></div>`))}
+  ${frame('1d · ' + N('หลายอำเภอหรือหลายจังหวัด: เลือกจากรายการรวม (13240)', 'Several districts or provinces: one combined picker (13240)'), card(legend(T.legendShip)
+    + postalRow('13240', { desc: false })
+    + `<div class="field" role="radiogroup" aria-labelledby="pick13240"><span class="label" id="pick13240">${T.pickArea('13240', 6)}</span><div class="radios">${AREAS_13240.map((a, i) => `<div class="radio ${i === 5 ? 'on kb' : ''}"><span class="dot"></span><span>${a[0]}<small>${a[1]} › ${a[2]}</small></span></div>`).join('')}</div>
+      <p class="desc">${N('6 ตัวเลือกหรือน้อยกว่า: แสดงเป็นปุ่มเลือก เกิน 6: ใช้ช่องค้นหาแบบรายการ', '6 or fewer: radio list. More than 6: a searchable combobox.')}</p></div>`
+    + areaGrid(N('ลพบุรี','Lop Buri'), N('เมืองลพบุรี','Mueang Lop Buri'), N('โก่งธนู','Kong Thanu'), { dl: T.amphoe, sl: T.tambon })))}
+</div>`;
+
+S.edge = () => `<div class="wrap">
+  ${frame('2a · ' + N('รหัสของหน่วยงาน ซ่อนไว้โดยปริยาย (10001)', 'Facility code, hidden by default (10001)'), card(legend(T.legendShip)
+    + postalRow('10001', { desc: false })
+    + `<div class="alert" role="status"><span class="i">i</span><span class="t">${T.facilityTitle('10001')}</span><span class="b">${T.facilityBody(N('ศูนย์ไปรษณีย์สุวรรณภูมิ','Suvarnabhumi Mail Center'))} <button class="link">${T.facilityUse}</button></span></div>`
+    + areaGrid('', '', '', {})
+    + `<p class="desc">${N('ชื่อหน่วยงานมาจากช่อง note ของชุดข้อมูล ไม่ฝังในโค้ด · ตั้ง showFacilityCodes เพื่อให้รหัสแบบนี้ทำงานเหมือนรหัสปกติ', 'Facility name comes from the dataset note field, never hard-coded. showFacilityCodes makes these behave like ordinary codes.')}</p>`))}
+  ${frame('2b · ' + N('ไม่พบรหัส: บอกแล้วให้เลือกเอง ไม่บล็อก (99999)', 'Unknown code: say so, fall back, never block (99999)'), card(legend(T.legendShip)
+    + postalRow('99999', { desc: false })
+    + `<div class="alert" role="status"><span class="i">!</span><span class="t">${T.notFoundTitle('99999')}</span><span class="b">${T.notFoundBody}</span></div>`
+    + areaGrid('', '', '', {})))}
+  ${frame('2c · ' + N('ไม่พบรหัส แล้วเลือกพื้นที่ที่ใช้รหัสอื่น: แนะนำรหัสที่ถูก', 'Unknown code, then an area chosen: suggest the right code'), card(legend(T.legendShip)
+    + postalRow('99999', { cls: 'invalid', desc: false })
+    + areaGrid(N('ภูเก็ต','Phuket'), N('เมืองภูเก็ต','Mueang Phuket'), N('กะรน','Karon'), { dl: T.amphoe, sl: T.tambon })
+    + `<p class="note">${N('ตำบลกะรนใช้รหัส', 'Karon uses')} <b class="num">83100</b> <button class="link">${N('ใช้ 83100', 'Use 83100')}</button></p>`
+    + `<p class="desc" style="color:var(--destructive)">${N('เมื่อส่งฟอร์ม: ', 'On submit: ')}${T.errMismatch}</p>`))}
+  ${frame('2d · ' + N('สถานะโหลดและผิดพลาด', 'Loading and error'), card(legend(T.legendShip)
+    + postalRow('1020', { spin: true, cls: 'focus', descText: T.loading })
+    + `<div class="alert destructive" role="alert"><span class="i">!</span><span class="t">${T.errorTitle}</span><span class="b">${T.errorBody} <button class="link" style="color:inherit">${T.retry}</button></span></div>`
+    + areaGrid('', '', '', {})
+    + `<p class="desc">${N('ดัชนีเล็ก (รหัสไปรษณีย์, จังหวัด) โหลดเมื่อโฟกัสช่องแรก ชื่อรายจังหวัดโหลดเมื่อเลือกจังหวัด · ระหว่างโหลด ช่องยังพิมพ์ได้ ค้นหาจะรอแล้วทำต่อเอง', 'Small indexes (postal codes, provinces) load on first focus; per-province names load when a province is chosen. Typing is never blocked; a pending lookup runs when data arrives.')}</p>`))}
+</div>`;
+
+S.area = () => `<div class="wrap">
+  ${frame('3a · ' + N('เริ่มที่พื้นที่: จังหวัด › อำเภอ (ภูเก็ต)', 'Area first: province › district (Phuket)'), card(legend(T.legendShip)
+    + areaGrid(N('ภูเก็ต','Phuket'), '', '', { dl: T.amphoe, sl: T.tambon, dc: 'focus',
+        dpop: `<div class="pop"><div class="search">⌕ ${T.searchHere(T.amphoe)}</div><ul><li class="on">${N('เมืองภูเก็ต','Mueang Phuket')}</li><li>${N('กะทู้','Kathu')}</li><li>${N('ถลาง','Thalang')}</li></ul></div>`, sdisabledDesc: T.chooseDistrictFirst(T.amphoe) })
+    + `<div style="height:120px"></div>` + postalRow('', { descText: N('เติมให้เมื่อเลือกตำบล', 'Filled when you pick a subdistrict') })))}
+  ${frame('3b · ' + N('ตำบลที่มีหลายรหัสไปรษณีย์: ให้เลือก (เกาะแก้ว: 83000, 83200)', 'Subdistrict with several postal codes: choose (Ko Kaeo: 83000, 83200)'), card(legend(T.legendShip)
+    + areaGrid(N('ภูเก็ต','Phuket'), N('เมืองภูเก็ต','Mueang Phuket'), N('เกาะแก้ว','Ko Kaeo'), { dl: T.amphoe, sl: T.tambon })
+    + `<div class="field" role="radiogroup" aria-labelledby="pcchoice"><span class="label" id="pcchoice">${T.postalForArea}</span><div class="seg"><span class="on">83000</span><span>83200</span></div><p class="desc">${T.postalChoice(2)}</p></div>`))}
+  ${frame('3c · ' + N('กรุงเทพฯ: ป้ายเปลี่ยนเป็น เขต/แขวง ตาม kind', 'Bangkok: labels follow kind (khet/khwaeng)'), card(legend(T.legendShip)
+    + areaGrid(BKK, N('บางรัก','Bang Rak'), N('บางรัก','Bang Rak'), { dl: T.khet, sl: T.khwaeng })
+    + `<div class="field" role="radiogroup"><span class="label">${T.postalForArea}</span><div class="seg"><span class="on">10500</span><span>10501</span></div></div>`
+    + `<p class="desc">${N('ก่อนเลือกจังหวัด ป้ายเป็น “อำเภอ/เขต” “ตำบล/แขวง” · หลังเลือก ใช้ kind ของระดับนั้น (khet → เขต, khwaeng → แขวง, amphoe → อำเภอ, tambon → ตำบล) · ป้ายเปลี่ยน แต่ id ของช่องไม่เปลี่ยน', 'Before a province: "District" / "Subdistrict". After: the level\'s kind decides. Labels change; field ids never do.')}</p>`))}
+  ${frame('3d · ' + N('เปลี่ยนจังหวัดหลังเลือกครบ: ล้างระดับล่างและบอก', 'Changing province after a full pick: clear lower levels and say so'), card(legend(T.legendShip)
+    + areaGrid(N('เชียงใหม่','Chiang Mai'), '', '', { pc: 'focus', dl: T.amphoe, sl: T.tambon })
+    + postalRow('', { desc: false })
+    + live(N('ล้างอำเภอ ตำบล และรหัสไปรษณีย์แล้ว เพราะไม่อยู่ในเชียงใหม่', 'District, subdistrict and postal code cleared: they are not in Chiang Mai'))
+    + `<p class="desc">${N('ถ้าค่าเดิมยังอยู่ในจังหวัดใหม่ (ไม่ค่อยเกิด) ให้คงไว้', 'Values still valid in the new province are kept.')}</p>`))}
+</div>`;
+
+S.search = () => `<div class="wrap">
+  ${frame('4a · ' + N('ช่องค้นหาเดียว: ไม่ต้องพิมพ์คำนำหน้า (“บางรัก”)', 'Single search box: prefixes ignored ("bang rak")'), card(legend(T.legendShip)
+    + field('q', T.search, `<div class="input focus">${N('บางรัก', 'bang rak')}</div>`, { desc: T.searchDesc,
+      pop: `<div class="pop" role="listbox"><ul>
+        <li class="on"><span><mark>${N('แขวงบางรัก','Bang Rak')}</mark>${N(' ',', ')}${N('เขตบางรัก กรุงเทพมหานคร','Bang Rak, Bangkok')}</span><small>10500</small></li>
+        <li><span><mark>${N('ตำบลบางรัก','Bang Rak')}</mark>${N(' ',', ')}${N('อำเภอเมืองตรัง จังหวัดตรัง','Mueang Trang, Trang')}</span><small>92000</small></li>
+        <li><span>${N('แขวงสี่พระยา','Si Phraya')}${N(' ',', ')}<mark>${N('เขตบางรัก','Bang Rak')}</mark>${N(' ',', ')}${N('กรุงเทพมหานคร','Bangkok')}</span><small>10500</small></li>
+        <li><span>${N('แขวงสุริยวงศ์','Suriyawong')}${N(' ',', ')}<mark>${N('เขตบางรัก','Bang Rak')}</mark>${N(' ',', ')}${N('กรุงเทพมหานคร','Bangkok')}</span><small>10500</small></li>
+      </ul><div class="grp" style="padding:6px 12px 10px">${T.searchMore}</div></div>` })
+    + `<div style="height:200px"></div>`
+    + `<p class="desc">${N('ลำดับผล: ชื่อตำบลตรงก่อน › อำเภอตรง › จังหวัดตรง · สูงสุด 8 รายการ · ค้นหาตั้งแต่ 2 ตัวอักษร หรือรหัส 3 หลักขึ้นไป · ตัวหนาคือส่วนที่ตรง', 'Ranking: subdistrict match › district match › province match. Max 8. Starts at 2 letters or 3 digits. Bold marks the match.')}</p>`))}
+  ${frame('4b · ' + N('เลือกผลแล้ว: เติมช่องด้านล่าง ยังแก้ได้', 'After choosing: the fields below fill and stay editable'), card(legend(T.legendShip)
+    + field('q', T.search, `<div class="input">${N('แขวงบางรัก เขตบางรัก กรุงเทพมหานคร 10500','Bang Rak, Bang Rak, Bangkok 10500')}</div>`)
+    + areaGrid(BKK, N('บางรัก','Bang Rak'), N('บางรัก','Bang Rak'), { dl: T.khet, sl: T.khwaeng })
+    + postalRow('10500', { desc: false })))}
+  ${frame('4c · ' + N('ไม่พบผลค้นหา', 'Search: no match'), card(legend(T.legendShip)
+    + field('q', T.search, `<div class="input focus">${N('บางรักษ์ใหม่', 'bang rakk nuea')}</div>`, {
+      pop: `<div class="pop"><div class="empty"><b style="display:block;color:var(--foreground);font-weight:500">${T.searchEmpty(N('บางรักษ์ใหม่','bang rakk nuea'))}</b>${T.searchEmptyBody}<br><button class="link" style="margin-top:8px">${T.fillManually}</button></div></div>` })
+    + `<div style="height:110px"></div>`))}
+  ${frame('4d · ' + N('ค้นด้วยภาษาอังกฤษบนฟอร์มภาษาไทย', 'English query on a Thai-locale form'), card(legend(T.legendShip)
+    + field('q', T.search, `<div class="input focus">karon</div>`, {
+      pop: `<div class="pop"><ul><li class="on"><span><mark>${N('ตำบลกะรน','Karon')}</mark>${N(' ',', ')}${N('อำเภอเมืองภูเก็ต จังหวัดภูเก็ต','Mueang Phuket, Phuket')}</span><small>83100</small></li></ul></div>` })
+    + `<div style="height:60px"></div><p class="desc">${N('ค้นทั้งชื่อไทยและอังกฤษเสมอ แสดงผลตามภาษาของฟอร์ม', 'Always matches Thai and English names; shows results in the form\'s language.')}</p>`))}
+</div>`;
+
+S.multi = () => `<div class="wrap" style="grid-template-columns: 640px 640px">
+  ${frame('5a · ' + N('หลายที่อยู่: ใช้ที่อยู่เดียวกัน (ค่าเริ่มต้น)', 'Multiple addresses: same as shipping (default)'), `<div class="card" style="display:grid;gap:28px">
+    <fieldset>${legend(T.legendShip)}${postalRow('83100', { desc: false })}${areaGrid(N('ภูเก็ต','Phuket'), N('เมืองภูเก็ต','Mueang Phuket'), N('กะรน','Karon'), { dl: T.amphoe, sl: T.tambon })}</fieldset>
+    <fieldset>${legend(T.legendTax)}<div class="check"><span class="box">✓</span>${T.sameAs}</div>
+      <div class="summary">${N('ตำบลกะรน อำเภอเมืองภูเก็ต จังหวัดภูเก็ต 83100','Karon, Mueang Phuket, Phuket 83100')}</div>
+      <p class="desc">${N('ขณะเลือกอยู่ แก้ที่อยู่จัดส่งแล้วที่อยู่ใบกำกับภาษีเปลี่ยนตาม', 'While ticked, edits to shipping carry over.')}</p></fieldset></div>`)}
+  ${frame('5b · ' + N('เลิกเลือก: คัดลอกมาให้แก้ ไม่ใช่ช่องว่าง', 'Unticked: copied in to edit, never blank'), `<div class="card" style="display:grid;gap:28px">
+    <fieldset>${legend(T.legendShip)}<div class="summary" style="border-style:solid">${N('ตำบลกะรน อำเภอเมืองภูเก็ต จังหวัดภูเก็ต 83100','Karon, Mueang Phuket, Phuket 83100')}</div></fieldset>
+    <fieldset>${legend(T.legendTax)}<div class="check"><span class="box off"></span>${T.sameAs}</div><p class="desc">${T.sameAsDesc}</p>
+      ${postalRow('83100', { desc: false, cls: 'focus' })}${areaGrid(N('ภูเก็ต','Phuket'), N('เมืองภูเก็ต','Mueang Phuket'), N('กะรน','Karon'), { dl: T.amphoe, sl: T.tambon })}</fieldset></div>`)}
+</div>`;
+
+S.mobile = () => `<div class="wrap" style="grid-template-columns: 390px 390px 390px">
+  ${frame('6a · ' + N('มือถือ: แป้นตัวเลข', 'Mobile: numeric keypad'), `<div class="phone"><div class="bar"></div><div style="padding:0 16px"><fieldset>${legend(T.legendShip)}${postalRow('102', { cls: 'focus' })}
+    <div style="display:grid;gap:12px">${field('p', T.province, trigger('', T.provincePh))}${field('d', T.district, trigger('', T.districtPh, 'disabled'))}</div></fieldset></div>
+    <div style="position:absolute;left:0;right:0;bottom:0"><div class="kbd">${[1,2,3,4,5,6,7,8,9,'',0,'⌫'].map(k => `<span>${k}</span>`).join('')}</div></div></div>`)}
+  ${frame('6b · ' + N('มือถือ: ตัวเลือกเป็น Drawer เต็มความกว้าง', 'Mobile: picker opens as a Drawer'), `<div class="phone"><div class="bar"></div><div style="padding:0 16px;opacity:.35"><fieldset>${legend(T.legendShip)}${postalRow('10200', { desc: false })}</fieldset></div>
+    <div class="drawer" style="height:560px"><div class="handle"></div><div style="padding:0 16px"><div class="label" style="font-size:16px;font-weight:600">${T.khwaeng}</div><p class="desc" style="margin:4px 0 10px">${T.pickOne('10200', 12, T.khwaeng)}</p><div class="input">⌕ <span class="ph" style="flex:1;color:var(--muted-foreground)">${T.searchHere(T.khwaeng)}</span></div></div>
+    <div class="pop" style="position:static;border:0;box-shadow:none"><ul style="max-height:none">${KHWAENG_10200.slice(0, 8).map((k, i) => `<li class="${i === 1 ? 'on' : ''}">${N(k[1], k[2])}</li>`).join('')}</ul></div></div></div>`)}
+  ${frame('6c · ' + N('มือถือ: ช่องเรียงลงตามลำดับ', 'Mobile: fields stack in reading order'), `<div class="phone"><div class="bar"></div><div style="padding:0 16px"><fieldset>${legend(T.legendShip)}
+    ${postalRow('83100', { desc: false, note: `<p class="note">✓ ${T.autofilled('83100')}</p>` })}
+    <div style="display:grid;gap:12px">${field('p', T.province, trigger(N('ภูเก็ต','Phuket'), '', 'filled'))}${field('d', T.amphoe, trigger(N('เมืองภูเก็ต','Mueang Phuket'), '', 'filled'))}${field('s', T.tambon, trigger(N('กะรน','Karon'), '', 'filled'))}</div>
+    <p class="desc">${N('ทุกแถวในรายการสูงอย่างน้อย 44px · Drawer ใช้เมื่อจอแคบกว่า 640px', 'List rows are at least 44px tall. The Drawer is used below 640px.')}</p></fieldset></div></div>`)}
+</div>`;
+
+S.site = () => `<div style="padding:32px">
+<div class="site">
+  <nav>
+    <div style="font-weight:600;font-size:14px;padding:0 8px">thailand-address</div>
+    <h4>${N('เริ่มต้น', 'Getting started')}</h4>
+    <a class="on">${N('ภาพรวม', 'Overview')}</a><a>${N('ติดตั้ง', 'Installation')}</a><a>${N('ชุดข้อมูล', 'Dataset')}</a>
+    <h4>${N('ตัวอย่าง', 'Examples')}</h4>
+    <a>${N('เริ่มที่รหัสไปรษณีย์', 'Postal code first')}</a><a>${N('เริ่มที่พื้นที่', 'Area first')}</a><a>${N('ช่องค้นหาเดียว', 'Single search box')}</a><a>${N('หลายที่อยู่', 'Multiple addresses')}</a><a>${N('รหัสหน่วยงานและรหัสที่ไม่พบ', 'Facility and unknown codes')}</a><a>${N('ใช้กับ react-hook-form', 'With react-hook-form')}</a>
+    <h4>${N('อ้างอิง', 'Reference')}</h4>
+    <a>API: &lt;AddressForm&gt;</a><a>API: @farzai/thailand-address</a><a>${N('ตรวจใน Laravel', 'Validate in Laravel')}</a><a>llms.txt</a>
+  </nav>
+  <main>
+    <div class="toolbar"><div><h1 style="font-size:28px;font-weight:600;letter-spacing:-.02em">${N('ฟอร์มที่อยู่ไทย', 'Thai address form')}</h1><p class="desc" style="font-size:15px;margin-top:4px">${N('คอมโพเนนต์ shadcn/ui สำหรับที่อยู่ไทย พิมพ์รหัสไปรษณีย์แล้วเติมให้ ส่งออกเป็นรหัส ไม่ใช่ชื่อ', 'A shadcn/ui component for Thai addresses. Type a postal code and the rest fills in. Outputs codes, not names.')}</p></div>
+      <div class="tabs"><span class="${L === 'th' ? 'on' : ''}">ไทย</span><span class="${L === 'en' ? 'on' : ''}">English</span></div></div>
+    <pre style="margin-bottom:24px"><span class="c">$</span> npx shadcn@latest add https://thailand-address-demo.farzai.com/r/address-form.json</pre>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+      <div><div class="tabs" style="margin-bottom:12px"><span class="on">${N('เริ่มที่รหัสไปรษณีย์','Postal code first')}</span><span>${N('เริ่มที่พื้นที่','Area first')}</span><span>${N('ค้นหา','Search')}</span><span>${N('หลายที่อยู่','Multiple')}</span></div>
+        ${card(legend(T.legendShip) + `<div class="host">${field('line', T.line, input(N('99/1 ถนนปฏัก','99/1 Patak Rd')))}</div>` + postalRow('83100', { desc: false, note: `<p class="note">✓ ${T.autofilled('83100')}</p>` }) + areaGrid(N('ภูเก็ต','Phuket'), N('เมืองภูเก็ต','Mueang Phuket'), N('กะรน','Karon'), { dl: T.amphoe, sl: T.tambon }) + `<div class="row" style="justify-content:space-between"><div class="check"><span class="box off"></span><span style="font-weight:400">${T.showFacility}</span></div><button class="btn">${N('ส่ง','Submit')}</button></div>`)}
+        <p class="desc" style="margin-top:8px">${N('กรอบประ: ช่องของแอปผู้ใช้ (บ้านเลขที่) อยู่นอกคอมโพเนนต์', 'Dashed outline: the host app\'s own field (house number) sits outside the component.')}</p></div>
+      <div style="display:grid;gap:12px;align-content:start">
+        <div class="row" style="justify-content:space-between"><span class="label">${N('ข้อมูลที่ฟอร์มส่ง', 'Payload the form produces')}</span><div class="tabs"><span class="on">JSON</span><span>${N('ฟอร์ม HTML','HTML form')}</span><span>Laravel</span></div></div>
+<pre>{
+  <span class="k">"shipping"</span>: {
+    <span class="k">"province_code"</span>: <span class="s">"83"</span>,
+    <span class="k">"district_code"</span>: <span class="s">"8301"</span>,
+    <span class="k">"subdistrict_code"</span>: <span class="s">"830108"</span>,
+    <span class="k">"postal_code"</span>: <span class="s">"83100"</span>
+  }
+}</pre>
+<pre><span class="c">// ${N('ตรวจฝั่งเซิร์ฟเวอร์ด้วย farzai/thailand-address', 'Validate on the server with farzai/thailand-address')}</span>
+$request->validate([
+  <span class="s">'shipping.province_code'</span>    => <span class="s">'required|thai_province'</span>,
+  <span class="s">'shipping.district_code'</span>    => <span class="s">'required|thai_district:shipping.province_code'</span>,
+  <span class="s">'shipping.subdistrict_code'</span> => <span class="s">'required|thai_subdistrict:shipping.district_code'</span>,
+  <span class="s">'shipping.postal_code'</span>      => <span class="s">'required|thai_postal_code:shipping.subdistrict_code'</span>,
+]);</pre>
+        <div class="alert"><span class="i">i</span><span class="t">${N('ชุดข้อมูล', 'Dataset')}</span><span class="b">${N('snapshot ที่ตรึงไว้', 'Pinned snapshot')} <span style="font-family:Menlo,monospace">v1/2026-10-xx</span> · ${N('เอกสารฟิลด์', 'Field docs')} · schema.json · llms.txt · ${N('แหล่งข้อมูลและสัญญาอนุญาต (MDES CC-BY)', 'Sources and licences (MDES CC-BY)')}</span></div>
+      </div>
+    </div>
+  </main>
+</div></div>`;
+
+const html = (S[screen] || S.postal)();
+document.getElementById('app').innerHTML = html;
+</script>
+</body>
+</html>
