@@ -23,11 +23,11 @@ export function CodeBlock({
     setTimeout(() => setCopied(false), 1500)
   }
   return (
-    <div className={cn("relative rounded-lg border bg-muted/40", className)}>
+    <div className={cn("relative rounded-lg bg-surface", className)}>
       <pre
         aria-label={label}
         tabIndex={0}
-        className="overflow-x-auto p-4 pr-12 font-mono text-[13px] leading-relaxed"
+        className="overflow-x-auto rounded-lg py-4.5 pr-12 pl-5 font-mono text-[13px] leading-[1.75] outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
       >
         <code>{code}</code>
       </pre>
@@ -35,7 +35,7 @@ export function CodeBlock({
         type="button"
         variant="ghost"
         size="icon-sm"
-        className="absolute top-2 right-2"
+        className="absolute top-2 right-2 text-muted-foreground"
         onClick={copy}
         aria-label={
           copied

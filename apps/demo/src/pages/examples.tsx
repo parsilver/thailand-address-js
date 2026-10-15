@@ -40,17 +40,30 @@ const { control, handleSubmit } = useForm<Values>({ defaultValues: { shipping: E
 </form>`,
 }
 
+/**
+ * An example page body: the demo (form, then what it sends), an optional
+ * "try" section, then the code.
+ */
 function Example({
   code,
+  tryTitle,
+  tryThis,
   children,
 }: {
   code: string
+  tryTitle?: React.ReactNode
+  tryThis?: React.ReactNode
   children: React.ReactNode
 }) {
   const t = useT()
   return (
     <>
       {children}
+      {tryThis ? (
+        <Section title={tryTitle ?? t("ลองรหัสเหล่านี้", "Try these codes")}>
+          <Prose>{tryThis}</Prose>
+        </Section>
+      ) : null}
       <Section title={t("โค้ด", "Code")}>
         <CodeBlock label="TSX" code={code} />
       </Section>
@@ -68,9 +81,9 @@ export function PostalFirstPage() {
         "The default. Type the 5 digits and the form fills in the rest; every other field confirms or corrects it."
       )}
     >
-      <Example code={SNIPPETS.postal}>
-        <LiveDemo mode="postal-first" />
-        <Prose>
+      <Example
+        code={SNIPPETS.postal}
+        tryThis={
           <ul>
             <li>
               {t(
@@ -91,7 +104,9 @@ export function PostalFirstPage() {
               )}
             </li>
           </ul>
-        </Prose>
+        }
+      >
+        <LiveDemo mode="postal-first" layout="stacked" id="demo" />
       </Example>
     </Page>
   )
@@ -107,16 +122,19 @@ export function AreaFirstPage() {
         "Pick the province, district, then subdistrict; the postal code follows. A subdistrict with several codes asks which one."
       )}
     >
-      <Example code={SNIPPETS.area}>
-        <LiveDemo mode="area-first" />
-        <Prose>
+      <Example
+        code={SNIPPETS.area}
+        tryTitle={t("ลองดู", "Try this")}
+        tryThis={
           <p>
             {t(
               "ลอง ภูเก็ต › เมืองภูเก็ต › เกาะแก้ว ซึ่งมีรหัส 83000 และ 83200",
               "Try Phuket › Mueang Phuket › Ko Kaeo, which has 83000 and 83200."
             )}
           </p>
-        </Prose>
+        }
+      >
+        <LiveDemo mode="area-first" layout="stacked" id="demo" />
       </Example>
     </Page>
   )
@@ -133,7 +151,7 @@ export function SearchPage() {
       )}
     >
       <Example code={SNIPPETS.search}>
-        <LiveDemo mode="search" />
+        <LiveDemo mode="search" layout="stacked" id="demo" />
       </Example>
     </Page>
   )
@@ -150,7 +168,7 @@ export function MultiplePage() {
       )}
     >
       <Example code={SNIPPETS.multiple}>
-        <LiveDemo mode="multiple" />
+        <LiveDemo mode="multiple" layout="stacked" id="demo" />
       </Example>
     </Page>
   )
@@ -169,30 +187,37 @@ export function FacilityUnknownPage() {
         "10001 belongs to a mail centre, not an address, and 99999 doesn't exist. Either way the form says so and manual selection still works."
       )}
     >
-      <Example code={SNIPPETS.facility}>
-        <Field orientation="horizontal">
-          <Checkbox
-            id="show-facility"
-            checked={show}
-            onCheckedChange={(v) => setShow(v === true)}
-          />
-          <FieldLabel htmlFor="show-facility">
-            {t("แสดงรหัสไปรษณีย์ของหน่วยงาน", "Show facility postal codes")}
-          </FieldLabel>
-        </Field>
-        <LiveDemo
-          key={String(show)}
-          mode="postal-first"
-          showFacilityCodes={show}
-        />
-        <Prose>
+      <Example
+        code={SNIPPETS.facility}
+        tryTitle={t("ลองดู", "Try this")}
+        tryThis={
           <p>
             {t(
               "พิมพ์ 99999 แล้วเลือก ภูเก็ต › เมืองภูเก็ต › กะรน ฟอร์มจะบอกว่าตำบลกะรนใช้รหัส 83100 และให้กดใช้รหัสนั้นได้",
               "Type 99999, then pick Phuket › Mueang Phuket › Karon. The form says Karon uses 83100 and offers it."
             )}
           </p>
-        </Prose>
+        }
+      >
+        <div className="flex flex-col gap-8">
+          <Field orientation="horizontal">
+            <Checkbox
+              id="show-facility"
+              checked={show}
+              onCheckedChange={(v) => setShow(v === true)}
+            />
+            <FieldLabel htmlFor="show-facility">
+              {t("แสดงรหัสไปรษณีย์ของหน่วยงาน", "Show facility postal codes")}
+            </FieldLabel>
+          </Field>
+          <LiveDemo
+            key={String(show)}
+            mode="postal-first"
+            showFacilityCodes={show}
+            layout="stacked"
+            id="demo"
+          />
+        </div>
       </Example>
     </Page>
   )
@@ -214,7 +239,7 @@ function RhfDemo() {
   })
   return (
     <form
-      className="flex flex-col gap-6 rounded-xl border p-5"
+      className="flex flex-col gap-6"
       onSubmit={handleSubmit((data) => setSaved(JSON.stringify(data, null, 2)))}
     >
       <Controller

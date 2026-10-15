@@ -6,6 +6,7 @@ import {
   type AddressFormMode,
 } from "@/registry/address-form/address-form"
 import { AddressSameAs } from "@/registry/address-form/address-same-as"
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
@@ -38,17 +39,27 @@ function typeInto(el: HTMLInputElement | null, text: string) {
   el.focus()
 }
 
-/** A live <AddressForm> beside the payload it produces. */
+/**
+ * A live <AddressForm> and the payload it produces. `split` puts the payload
+ * in a sticky column beside the form (home); `stacked` follows the form with
+ * it as a section (the single-column docs pages). `id` gives the form stable
+ * element ids, which the end-to-end flows select by.
+ */
 export function LiveDemo({
   mode,
   showFacilityCodes = false,
+  layout = "split",
+  id: fixedId,
 }: {
   mode: DemoMode
   showFacilityCodes?: boolean
+  layout?: "split" | "stacked"
+  id?: string
 }) {
   const { locale } = useLocale()
   const t = useT()
-  const id = React.useId().replace(/:/g, "")
+  const generatedId = React.useId().replace(/:/g, "")
+  const id = fixedId ?? generatedId
   const [shipping, setShipping] = React.useState<AddressValue>(EMPTY)
   const [tax, setTax] = React.useState<AddressValue>(EMPTY)
   const [sent, setSent] = React.useState(false)
@@ -69,17 +80,24 @@ export function LiveDemo({
   }
 
   return (
-    <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
-      <div className="flex min-w-0 flex-col gap-3">
+    <div
+      className={cn(
+        "grid min-w-0",
+        layout === "split"
+          ? "gap-10 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-16"
+          : "gap-14 max-md:gap-11"
+      )}
+    >
+      <div className="flex min-w-0 flex-col gap-5">
         <form
-          className="flex flex-col gap-6 rounded-xl border p-5"
+          className="flex flex-col gap-6"
           onSubmit={(e) => {
             e.preventDefault()
             setSent(true)
           }}
           onChange={() => setSent(false)}
         >
-          <Field className="rounded-lg border border-dashed p-3">
+          <Field className="border-b pb-6">
             <FieldLabel htmlFor={`demo-${id}-line`}>
               {t("บ้านเลขที่ ถนน ซอย", "House no., street, soi")}
             </FieldLabel>
@@ -88,10 +106,14 @@ export function LiveDemo({
               name="shipping[line]"
               autoComplete="address-line1"
             />
-            <FieldDescription>
+            <FieldDescription className="flex items-center gap-1.5">
+              <span
+                aria-hidden
+                className="size-1.5 shrink-0 rounded-full border border-muted-foreground"
+              />
               {t(
-                "ช่องนี้เป็นของแอปคุณเอง ไม่ได้อยู่ในคอมโพเนนต์",
-                "This field belongs to your app, not to the component."
+                "ช่องของแอปคุณเอง ไม่ได้อยู่ในคอมโพเนนต์",
+                "Your app's own field, not part of the component"
               )}
             </FieldDescription>
           </Field>
@@ -134,26 +156,32 @@ export function LiveDemo({
           </div>
         </form>
         {samples.length ? (
-          <div className="flex flex-wrap items-center gap-2 text-sm">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm">
             <span className="text-muted-foreground">
               {t("ลองพิมพ์", "Try")}
             </span>
             {samples.map((s) => (
-              <Button
+              <button
                 key={s}
                 type="button"
-                variant="outline"
-                size="sm"
-                className="tabular-nums"
+                className="min-h-6 rounded-sm tabular-nums underline decoration-border underline-offset-4 outline-none hover:decoration-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
                 onClick={() => trySample(s)}
               >
                 {s}
-              </Button>
+              </button>
             ))}
           </div>
         ) : null}
       </div>
-      <PayloadPanel addresses={addresses} />
+      {layout === "split" ? (
+        <div className="min-w-0 lg:sticky lg:top-6 lg:self-start">
+          <PayloadPanel addresses={addresses} />
+        </div>
+      ) : (
+        <section className="min-w-0">
+          <PayloadPanel addresses={addresses} variant="section" />
+        </section>
+      )}
     </div>
   )
 }

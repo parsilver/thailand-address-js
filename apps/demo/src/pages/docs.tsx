@@ -133,11 +133,11 @@ export function DatasetPage() {
         </Prose>
       </Section>
       <Section title={t("ไฟล์ที่หน้าเว็บโหลด", "The files a page loads")}>
-        <ul className="flex flex-col divide-y rounded-xl border text-sm">
+        <ul className="flex flex-col divide-y border-b text-sm">
           {files.map(([f, d]) => (
             <li
               key={f}
-              className="flex flex-col gap-0.5 p-3 sm:flex-row sm:gap-4"
+              className="flex flex-col gap-0.5 py-3 sm:flex-row sm:gap-4"
             >
               <code className="shrink-0 font-mono sm:w-64">{f}</code>
               <span className="text-muted-foreground">{d}</span>
