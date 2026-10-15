@@ -1,4 +1,10 @@
-import { fireEvent, render, screen, within } from "@testing-library/react"
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react"
 import { SNAPSHOT } from "@farzai/thailand-address"
 import { beforeEach, describe, expect, it } from "vitest"
 
@@ -103,6 +109,23 @@ describe("chrome", () => {
     expect(screen.getByRole("contentinfo")).toHaveTextContent(
       `ข้อมูลล็อกไว้ที่ snapshot ${SNAPSHOT} · DOPA, ไปรษณีย์ไทย, MDES (CC-BY)`
     )
+  })
+})
+
+describe("menu sheet", () => {
+  it.each([
+    ["the menu button", "เมนู"],
+    ["the crumb", /ทุกหน้า/],
+  ])("closing it returns focus to %s", async (_, name) => {
+    open("/examples/postal-first")
+    await screen.findByRole("heading", { level: 1 })
+    const opener = screen.getByRole("button", { name })
+    opener.focus()
+    fireEvent.click(opener)
+    const sheet = await screen.findByRole("dialog")
+    fireEvent.keyDown(sheet, { key: "Escape" })
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
+    expect(opener).toHaveFocus()
   })
 })
 

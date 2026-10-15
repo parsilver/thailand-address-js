@@ -99,7 +99,11 @@ function DocsNav({ onNavigate }: { onNavigate?: () => void }) {
   )
 }
 
-function TopBar({ onMenu }: { onMenu: () => void }) {
+function TopBar({
+  onMenu,
+}: {
+  onMenu: (e: React.MouseEvent<HTMLElement>) => void
+}) {
   const { locale, setLocale } = useLocale()
   const t = useT()
   const { dark, toggle } = useTheme()
@@ -188,18 +192,35 @@ function TopBar({ onMenu }: { onMenu: () => void }) {
   )
 }
 
+/**
+ * The mobile menu. Two different buttons open it (the menu icon and the
+ * docs crumb), so neither is a SheetTrigger and Radix has nothing to hand
+ * focus back to on close; `returnFocusTo` is whichever one opened it.
+ */
 function Menu({
   open,
   onOpenChange,
+  returnFocusTo,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
+  returnFocusTo: React.RefObject<HTMLElement | null>
 }) {
   const sections = useSections()
   const close = () => onOpenChange(false)
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="left" className="w-72 gap-6 overflow-y-auto p-5">
+      <SheetContent
+        side="left"
+        className="w-72 gap-6 overflow-y-auto p-5"
+        onCloseAutoFocus={(e) => {
+          const opener = returnFocusTo.current
+          if (opener?.isConnected) {
+            e.preventDefault()
+            opener.focus()
+          }
+        }}
+      >
         <SheetHeader className="p-0">
           <SheetTitle>thailand-address</SheetTitle>
         </SheetHeader>
@@ -228,7 +249,11 @@ function Menu({
 }
 
 /** Under 768px the docs sidebar folds into this row, which opens the menu. */
-function Crumb({ onOpen }: { onOpen: () => void }) {
+function Crumb({
+  onOpen,
+}: {
+  onOpen: (e: React.MouseEvent<HTMLElement>) => void
+}) {
   const [path] = useLocation()
   const { locale } = useLocale()
   const t = useT()
@@ -328,6 +353,11 @@ function Footer() {
 export function Layout({ children }: { children: React.ReactNode }) {
   const t = useT()
   const [menuOpen, setMenuOpen] = React.useState(false)
+  const menuOpener = React.useRef<HTMLElement | null>(null)
+  const openMenu = (e: React.MouseEvent<HTMLElement>) => {
+    menuOpener.current = e.currentTarget
+    setMenuOpen(true)
+  }
   const [path] = useLocation()
   const home = path === "/"
 
@@ -343,8 +373,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
       >
         {t("ข้ามไปที่เนื้อหา", "Skip to content")}
       </a>
-      <TopBar onMenu={() => setMenuOpen(true)} />
-      <Menu open={menuOpen} onOpenChange={setMenuOpen} />
+      <TopBar onMenu={openMenu} />
+      <Menu
+        open={menuOpen}
+        onOpenChange={setMenuOpen}
+        returnFocusTo={menuOpener}
+      />
       <main
         id="main"
         tabIndex={-1}
@@ -358,7 +392,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <DocsNav />
             </aside>
             <div className="max-w-180 min-w-0">
-              <Crumb onOpen={() => setMenuOpen(true)} />
+              <Crumb onOpen={openMenu} />
               {children}
               <Pager />
             </div>
