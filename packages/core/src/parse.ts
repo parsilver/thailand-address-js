@@ -74,4 +74,6 @@ export function postalOption(r: Row): (PostalOption & { subdistrict_code: string
   }
 }
 
-export const rows = (v: unknown): Row[] => (Array.isArray(v) ? (v as Row[]) : [])
+/** The array's object rows; anything else in it (null, a number) is skipped. */
+export const rows = (v: unknown): Row[] =>
+  Array.isArray(v) ? v.filter((r): r is Row => typeof r === 'object' && r !== null && !Array.isArray(r)) : []
