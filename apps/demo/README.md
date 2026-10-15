@@ -4,7 +4,8 @@ The demo, docs and shadcn registry host at https://thailand-address-demo.farzai.
 
 - It builds the registry item from `../../registry/src/registry` the way an install would, through the `@/registry/*` alias.
 - `scripts/copy-registry.mjs` copies the built `registry/public/r/*.json` into `public/r`, so the install URL is `/r/address-form.json`.
-- `public/_headers` sets the CSP and the other security headers. `connect-src` allows only `self` and `https://data.farzai.com`. `/r/*` is served as JSON with CORS open.
+- `scripts/route-pages.mjs` writes `dist/<route>/index.html` for each sidebar page, plus `dist/404.html`. Known routes get 200, and anything else, including a mistyped `/r/*.json`, gets a real 404. There is no SPA fallback.
+- `public/_headers` sets the CSP, HSTS, COOP and the other security headers. `connect-src` allows only `self` and `https://data.farzai.com`. `/r/*` is served as JSON with CORS open.
 - `public/llms.txt` describes the component and core package for LLMs.
 
 ```sh
