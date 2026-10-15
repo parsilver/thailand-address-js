@@ -100,7 +100,7 @@ describe("single search box", () => {
     expect(screen.getByText("พิมพ์เพิ่มเพื่อให้ผลแคบลง")).toBeInTheDocument()
   })
 
-  it("“บางรัก”: the exact khwaeng first, one row per postal code, then khet Bang Rak", async () => {
+  it("“บางรัก”: khet Bang Rak first (exact ties go to the higher level), then the exact khwaeng, one row per postal code", async () => {
     const { user } = renderForm({ mode: "search" })
     await user.type(
       screen.getByRole("combobox", { name: "ค้นหาที่อยู่" }),
@@ -111,10 +111,10 @@ describe("single search box", () => {
     )
     const rows = screen.getAllByRole("option").map((o) => o.textContent)
     expect(rows.slice(0, 4)).toEqual([
+      "เขตบางรัก กรุงเทพมหานคร",
       "แขวงบางรัก เขตบางรัก กรุงเทพมหานคร10500",
       "แขวงบางรัก เขตบางรัก กรุงเทพมหานคร10501",
       "ตำบลบางรัก อำเภอเมืองตรัง จังหวัดตรัง92000",
-      "เขตบางรัก กรุงเทพมหานคร",
     ])
   })
 
@@ -137,14 +137,14 @@ describe("single search box", () => {
     expect(screen.getByRole("combobox", { name: "อำเภอ" })).toBeEnabled()
   })
 
-  it("“bang rak” typed as written finds แขวงบางรัก first", async () => {
+  it("“bang rak” typed as written finds khet Bang Rak, then แขวงบางรัก", async () => {
     const { user } = renderForm({ mode: "search" })
     await user.type(
       screen.getByRole("combobox", { name: "ค้นหาที่อยู่" }),
       "bang rak"
     )
     await waitFor(() =>
-      expect(screen.getAllByRole("option")[0]).toHaveTextContent(
+      expect(screen.getAllByRole("option")[1]).toHaveTextContent(
         "แขวงบางรัก เขตบางรัก กรุงเทพมหานคร10500"
       )
     )

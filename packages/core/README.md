@@ -61,7 +61,7 @@ The files are fetched from `https://data.farzai.com/thailand-address/v1/<snapsho
   - A search runs from 2 letters or 3 digits.
   - Each hit has a `level`. A province or district name gives that province or district once (`level: 'province'` or `'district'`), not every subdistrict in it. A subdistrict gives one hit per postal code.
   - Every word must match, and a hit scores by its weakest word. The whole query without spaces is tried too, so names typed as written ("bang rak", "Mueang Phuket") match exactly.
-  - Exact matches come before prefix matches, which come before substring matches. Within each group, subdistricts come before districts, which come before provinces.
+  - Exact matches come before prefix matches, which come before substring matches. Among exact matches, the higher level wins: "chiang mai" gives the province before the subdistrict of that name in Roi Et. Among prefix and substring matches, subdistricts come before districts, which come before provinces.
   - Each hit carries the character ranges that matched, for highlighting.
 - **`validate({ province_code, district_code, subdistrict_code, postal_code })`:** checks the same things as the Laravel package's `thai_province`, `thai_district`, `thai_subdistrict` and `thai_postal_code` rules. Errors are `required`, `unknown` or `mismatch`.
 

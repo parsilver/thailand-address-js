@@ -34,11 +34,12 @@ describe.runIf(process.env['THAILAND_ADDRESS_LIVE'] === '1')('live snapshot', ()
       const h = r.hits[0]
       return h.level === 'subdistrict' ? `sub:${h.subdistrict.code}` : h.level === 'district' ? `district:${h.district.code}` : `province:${h.province.code}`
     }
-    expect(await first('bang rak')).toBe('sub:100404')
-    // An exact subdistrict เชียงใหม่ (Roi Et) ranks first by the brief's level order; the province is next.
+    expect(await first('bang rak')).toBe('district:1004')
+    // Exact-name ties go to the higher level: the province, then ตำบลเชียงใหม่ in Roi Et.
     const cm = await ta.search('chiang mai')
     if (cm.status !== 'ok') throw new Error(cm.status)
-    expect(cm.hits.slice(0, 2).some((h) => h.level === 'province' && h.province.code === '50')).toBe(true)
+    expect(cm.hits[0]?.level === 'province' && cm.hits[0].province.code).toBe('50')
+    expect(cm.hits[1]?.level === 'subdistrict' && cm.hits[1].subdistrict.code).toBe('450802')
     const th = await ta.search('เชียงใหม่')
     if (th.status !== 'ok') throw new Error(th.status)
     expect(th.hits.map((h) => h.level === 'province' && h.province.code)).toContain('50')
