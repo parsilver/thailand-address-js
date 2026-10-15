@@ -1,0 +1,56 @@
+# Thai address form (thailand-address)
+
+A shadcn/ui component and a TypeScript package for Thai addresses. The user types a postal code and the province, district and subdistrict fill in. The output is four codes, not names: province_code, district_code, subdistrict_code, postal_code.
+
+- Demo and docs: https://thailand-address-demo.farzai.com
+- Registry item: https://thailand-address-demo.farzai.com/r/address-form.json
+- Source: https://github.com/parsilver/thailand-address-js
+- Dataset contract: https://data.farzai.com/thailand-address/llms-full.txt
+
+## Install
+
+    npx shadcn@latest add https://thailand-address-demo.farzai.com/r/address-form.json
+
+This copies the files into components/address-form/ and installs @farzai/thailand-address (npm).
+
+## Use
+
+    import { AddressForm, type AddressValue } from "@/components/address-form/address-form"
+    <AddressForm name="shipping" value={value} onChange={setValue} required />
+
+- Value: { province_code, district_code, subdistrict_code, postal_code }. Codes are strings. Unset levels are null, never "".
+- With `name`, it renders hidden inputs name[province_code] and so on, so a plain HTML form posts the codes.
+- Props:
+  - `mode`: "postal-first" (default), "area-first" or "search".
+  - `locale`: "th" (default) or "en".
+  - `showFacilityCodes`: default false.
+  - also `required`, `disabled`, `legend`, `id` and `client`.
+- `<AddressSameAs source={shipping} value={tax} onChange={setTax} name="tax">{(field) => <AddressForm {...field} />}</AddressSameAs>` links a second address. It mirrors the source while ticked, and unticking copies the source in for editing.
+- Validation runs on submit only. It stops an invalid submit, for plain forms and for react-hook-form.
+
+## Postal code behaviour
+
+- One subdistrict (83100): every field fills.
+- Several subdistricts in one district (10200): the province and district fill, and the user picks the subdistrict.
+- Several districts or provinces (13240): one combined choice.
+- Facility code (10001, a mail centre): hidden by default and named from the dataset. The user can accept it anyway.
+- Unknown code (99999): the form says so and manual selection stays enabled. Picking an area then offers that area's real code.
+
+## Core package
+
+    npm install @farzai/thailand-address
+    import { createThaiAddress } from "@farzai/thailand-address"
+    const ta = createThaiAddress()
+
+Methods: provinces(), districts(code), subdistricts(code), resolve(code), postalCodesOf(code), lookupPostalCode(input), search(query), validate(value), preload(what). Also formatAddress(area, locale).
+
+The package pins one dataset snapshot and never reads latest.json. Never guess a postal code from a district or province code.
+
+## Server validation (Laravel, farzai/thailand-address on Composer)
+
+    'shipping.province_code'    => 'required|thai_province',
+    'shipping.district_code'    => 'required|thai_district:shipping.province_code',
+    'shipping.subdistrict_code' => 'required|thai_subdistrict:shipping.district_code',
+    'shipping.postal_code'      => 'required|thai_postal_code:shipping.subdistrict_code',
+
+About 50 subdistricts have no known postal code. The form allows an empty postal code for them, and `required` above rejects it. Use `nullable` for postal_code if you accept those addresses.

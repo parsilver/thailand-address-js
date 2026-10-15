@@ -33,6 +33,8 @@ jobs:
       - run: pnpm build
       - name: Package is publishable
         run: pnpm --filter @farzai/thailand-address exec publint
+      - name: Demo deploy config is valid (dry run, no credentials)
+        run: pnpm --filter @thailand-address/demo exec wrangler deploy --dry-run
       - name: Built registry matches its source
         run: |
           pnpm --filter @thailand-address/registry registry:build

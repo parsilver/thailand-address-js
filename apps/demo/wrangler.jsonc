@@ -1,0 +1,16 @@
+// Static assets only: no Worker script. Each page has its own index.html
+// (scripts/route-pages.mjs), so unknown paths get a real 404 from 404.html.
+// Personal Lead deploys with
+// `pnpm --filter @thailand-address/demo deploy` (wrangler deploy).
+// Never point this at thailand-address.farzai.com, which is reserved.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "thailand-address-demo",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "404-page",
+    "html_handling": "drop-trailing-slash"
+  },
+  "routes": [{ "pattern": "thailand-address-demo.farzai.com", "custom_domain": true }]
+}
