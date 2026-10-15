@@ -10,7 +10,7 @@
       "description": "A Thai address as four codes (province, district, subdistrict, postal code). Type a postal code and the rest fills in; area-first and single-search modes, Thai and English, and a same-as wrapper for a second address. Data comes lazily from the pinned snapshot of the Thai address dataset on data.farzai.com.",
       "dependencies": [
         "@farzai/thailand-address@^0.1.0",
-        "lucide-react"
+        "lucide-react@^1"
       ],
       "registryDependencies": [
         "field",
