@@ -268,9 +268,21 @@ export function createThaiAddress(options: ThaiAddressOptions = {}) {
     return done(errors)
   }
 
+  /**
+   * Fetch what a mode needs before the user gets there, e.g. on first focus.
+   * postal: the provinces list and the postal code index (about 30 KB).
+   * search: those plus every district and subdistrict name (about 200 KB).
+   */
+  async function preload(what: 'provinces' | 'postal' | 'search'): Promise<void> {
+    if (what === 'provinces') await provinces()
+    else if (what === 'postal') await Promise.all([provinces(), postalIndex()])
+    else await searchIndex()
+  }
+
   return {
     snapshot,
     baseUrl,
+    preload,
     provinces,
     districts,
     subdistricts,

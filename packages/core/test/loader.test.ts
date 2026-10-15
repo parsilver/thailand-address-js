@@ -67,6 +67,22 @@ describe('loading', () => {
   })
 })
 
+describe('preload', () => {
+  it('fetches what a mode needs ahead of the first lookup, once', async () => {
+    const { ta, calls } = client()
+    await ta.preload('postal')
+    await ta.preload('postal')
+    expect(calls.map((c) => c.split(`/${SNAPSHOT}/`)[1])).toEqual(['provinces.json', 'index/postal_codes.json'])
+    await ta.preload('search')
+    expect(calls.map((c) => c.split(`/${SNAPSHOT}/`)[1]).sort()).toEqual([
+      'districts.json',
+      'index/postal_codes.json',
+      'provinces.json',
+      'subdistricts.json',
+    ])
+  })
+})
+
 describe('hostile rows', () => {
   it('a null row in a file is skipped, not a TypeError', async () => {
     const { ta } = client({
