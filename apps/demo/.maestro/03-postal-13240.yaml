@@ -1,0 +1,16 @@
+# Several districts and provinces: one radio group of 6; picking โก่งธนู fills all three.
+url: ${BASE}
+name: postal-13240
+---
+- openLink: ${BASE}/examples/postal-first
+- extendedWaitUntil: { visible: "พิมพ์ 5 หลัก ระบบจะเติมที่อยู่ให้", timeout: 20000 }
+- tapOn: "เช่น 10200"
+- inputText: "13240"
+- extendedWaitUntil: { visible: "รหัส 13240 ใช้ได้ 6 พื้นที่ใน 2 จังหวัด เลือกพื้นที่ของคุณ", timeout: 15000 }
+- assertVisible: "อ.บ้านแพรก › พระนครศรีอยุธยา"
+- scrollUntilVisible: { element: "อ.เมืองลพบุรี › ลพบุรี", timeout: 10000 }
+- takeScreenshot: 03-postal-13240
+- tapOn: "โก่งธนู"
+- extendedWaitUntil: { visible: "เมืองลพบุรี", timeout: 10000 }
+- scrollUntilVisible: { direction: UP, element: '.*"province_code": "16".*"district_code": "1601".*"subdistrict_code": "160104".*"postal_code": "13240".*', timeout: 10000 }
+- takeScreenshot: 03-postal-13240-picked

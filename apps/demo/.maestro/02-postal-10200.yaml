@@ -1,0 +1,18 @@
+# Several khwaeng in one khet: province and district fill, the khwaeng picker is narrowed and not opened.
+url: ${BASE}
+name: postal-10200
+---
+- openLink: ${BASE}/examples/postal-first
+- extendedWaitUntil: { visible: "พิมพ์ 5 หลัก ระบบจะเติมที่อยู่ให้", timeout: 20000 }
+- tapOn: "เช่น 10200"
+- inputText: "10200"
+- extendedWaitUntil: { visible: "รหัส 10200 ใช้ได้ 12 แขวง เลือกแขวงของคุณ", timeout: 15000 }
+- assertVisible: "กรุงเทพมหานคร"
+- assertVisible: "พระนคร"
+- assertVisible: "เลือกแขวง"
+- assertNotVisible: "Suggestions"
+- scrollUntilVisible: { element: '.*"province_code": "10".*"district_code": "1001".*"subdistrict_code": null.*"postal_code": "10200".*', timeout: 15000 }
+- takeScreenshot: 02-postal-10200
+- tapOn: "เลือกแขวง"
+- extendedWaitUntil: { visible: "พระบรมมหาราชวัง", timeout: 5000 }
+- takeScreenshot: 02-postal-10200-open

@@ -1,0 +1,15 @@
+# Issue #1, postal code first: one subdistrict autofills everything.
+url: ${BASE}
+name: postal-83100
+---
+- openLink: ${BASE}/examples/postal-first
+- extendedWaitUntil: { visible: "พิมพ์ 5 หลัก ระบบจะเติมที่อยู่ให้", timeout: 20000 }
+- tapOn: "เช่น 10200"
+- inputText: "83100"
+- extendedWaitUntil:
+    visible: "เติมจากรหัสไปรษณีย์ 83100"
+    timeout: 15000
+- assertVisible: "ล้าง"
+- assertVisible: "เติมที่อยู่แล้ว: ตำบลกะรน อำเภอเมืองภูเก็ต จังหวัดภูเก็ต 83100"
+- scrollUntilVisible: { element: '.*"province_code": "83".*"district_code": "8301".*"subdistrict_code": "830108".*"postal_code": "83100".*', timeout: 15000 }
+- takeScreenshot: 01-postal-83100

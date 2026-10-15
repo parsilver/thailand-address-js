@@ -1,0 +1,18 @@
+# TH/EN: Bangkok labels follow kind; English shows District (khet).
+url: ${BASE}
+name: english
+---
+- openLink: ${BASE}/examples/postal-first
+- tapOn: "English"
+- extendedWaitUntil: { visible: "Postal code", timeout: 20000 }
+- tapOn: "e.g. 10200"
+- inputText: "10200"
+- scrollUntilVisible: { element: "District \\(khet\\)", timeout: 15000 }
+- scrollUntilVisible: { element: "Bangkok", timeout: 10000 }
+- takeScreenshot: 09-english-10200
+- openLink: ${BASE}/examples/postal-first
+- tapOn: "ไทย"
+- tapOn: "เช่น 10200"
+- inputText: "10200"
+- scrollUntilVisible: { element: "เขต", timeout: 15000 }
+- assertVisible: "แขวง"

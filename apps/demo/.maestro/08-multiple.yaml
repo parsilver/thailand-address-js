@@ -1,0 +1,14 @@
+# Multiple addresses: the tax invoice address mirrors shipping while ticked; unticking shows it, filled from shipping.
+url: ${BASE}
+name: multiple
+---
+- openLink: ${BASE}/examples/multiple
+- extendedWaitUntil: { visible: "พิมพ์ 5 หลัก ระบบจะเติมที่อยู่ให้", timeout: 20000 }
+- tapOn: "เช่น 10200"
+- inputText: "83100"
+- scrollUntilVisible: { element: '.*"tax": \{\s*"province_code": "83",\s*"district_code": "8301",\s*"subdistrict_code": "830108",\s*"postal_code": "83100".*', timeout: 15000 }
+- takeScreenshot: 08-multiple-mirror
+- scrollUntilVisible: { element: "ใช้ที่อยู่เดียวกับที่อยู่จัดส่ง", timeout: 10000 }
+- tapOn: "ใช้ที่อยู่เดียวกับที่อยู่จัดส่ง"
+- scrollUntilVisible: { element: "ที่อยู่ใบกำกับภาษี", timeout: 5000 }
+- takeScreenshot: 08-multiple-unticked
