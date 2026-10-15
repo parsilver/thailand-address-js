@@ -21,7 +21,7 @@ tgz="$dest/$file"
 [ -f "$tgz" ] || { echo "::error::npm pack reported $file but $tgz does not exist" >&2; exit 1; }
 
 contents="$(tar -tzf "$tgz")"
-for f in package/package.json package/README.md package/dist/index.js package/dist/index.d.ts package/schema/schema.json; do
+for f in package/package.json package/README.md package/LICENSE package/dist/index.js package/dist/index.d.ts package/schema/schema.json; do
   grep -qx "$f" <<<"$contents" || { echo "::error::$f is missing from $tgz" >&2; exit 1; }
 done
 echo "$tgz"
