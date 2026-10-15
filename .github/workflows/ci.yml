@@ -33,6 +33,13 @@ jobs:
       - run: pnpm build
       - name: Package is publishable
         run: pnpm --filter @farzai/thailand-address exec publint
+      - name: Built registry matches its source
+        run: |
+          pnpm --filter @thailand-address/registry registry:build
+          git diff --exit-code -- registry/public/r || {
+            echo "::error::registry/public/r is stale. Run pnpm --filter @thailand-address/registry registry:build and commit it."
+            exit 1
+          }
 
   # The same lookups against the real, pinned snapshot on data.farzai.com.
   # Snapshots are immutable, so this only changes when the pin does.

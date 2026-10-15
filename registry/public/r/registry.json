@@ -1,0 +1,78 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "thailand-address",
+  "homepage": "https://thailand-address-demo.farzai.com",
+  "items": [
+    {
+      "name": "address-form",
+      "type": "registry:component",
+      "title": "Thai address form",
+      "description": "A Thai address as four codes (province, district, subdistrict, postal code). Type a postal code and the rest fills in; area-first and single-search modes, Thai and English, and a same-as wrapper for a second address. Data comes lazily from the pinned snapshot of the Thai address dataset on data.farzai.com.",
+      "dependencies": [
+        "@farzai/thailand-address@^0.1.0",
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "field",
+        "label",
+        "input",
+        "button",
+        "popover",
+        "command",
+        "drawer",
+        "radio-group",
+        "toggle-group",
+        "checkbox",
+        "alert"
+      ],
+      "files": [
+        {
+          "path": "src/registry/address-form/address-form.tsx",
+          "type": "registry:component",
+          "target": "components/address-form/address-form.tsx"
+        },
+        {
+          "path": "src/registry/address-form/address-same-as.tsx",
+          "type": "registry:component",
+          "target": "components/address-form/address-same-as.tsx"
+        },
+        {
+          "path": "src/registry/address-form/address-search.tsx",
+          "type": "registry:component",
+          "target": "components/address-form/address-search.tsx"
+        },
+        {
+          "path": "src/registry/address-form/address-picker.tsx",
+          "type": "registry:component",
+          "target": "components/address-form/address-picker.tsx"
+        },
+        {
+          "path": "src/registry/address-form/address-form-copy.ts",
+          "type": "registry:component",
+          "target": "components/address-form/address-form-copy.ts"
+        },
+        {
+          "path": "src/registry/address-form/address-form-shared.ts",
+          "type": "registry:component",
+          "target": "components/address-form/address-form-shared.ts"
+        },
+        {
+          "path": "src/registry/address-form/address-form-client.ts",
+          "type": "registry:component",
+          "target": "components/address-form/address-form-client.ts"
+        },
+        {
+          "path": "src/registry/address-form/use-media-query.ts",
+          "type": "registry:component",
+          "target": "components/address-form/use-media-query.ts"
+        }
+      ],
+      "docs": "Use <AddressForm name=\"shipping\" value={value} onChange={setValue} />. Docs and examples: https://thailand-address-demo.farzai.com",
+      "categories": [
+        "form",
+        "address",
+        "thailand"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+import { StrictMode } from "react"
+import { createRoot } from "react-dom/client"
+
+import "./index.css"
+import App from "./App.tsx"
+
+// Dev preview only (`pnpm dev`): follows the OS colour scheme.
+document.documentElement.classList.toggle(
+  "dark",
+  matchMedia("(prefers-color-scheme: dark)").matches
+)
+
+createRoot(document.getElementById("root")!).render(
+  <StrictMode>
+    <App />
+  </StrictMode>
+)
