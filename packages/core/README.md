@@ -82,6 +82,12 @@ The library follows the dataset's rules:
 
 Types for the raw files are generated from the snapshot's `schema.json` (`pnpm gen:types`) and exported as `wire`.
 
+## Privacy
+
+The visitor's browser fetches the dataset files from data.farzai.com. The host sees the visitor's IP address and which `by-province/<code>.json` file was requested, so it learns the province being entered. The files are fetched without cookies and with `referrerPolicy: 'no-referrer'`, so the host doesn't learn which page asked.
+
+To keep all of that on your own origin, copy the snapshot's files to your own host. Then pass `createThaiAddress({ baseUrl: 'https://your.host/thailand-address/v1' })` and allow only that origin in your CSP `connect-src`.
+
 ## Data sources
 
 The data is derived from DOPA (ทำเนียบท้องที่), Thailand Post, and MDES's post-office dataset on data.go.th (CC-BY), with ISO 3166-2 codes from Debian iso-codes. Full attribution is in [the dataset docs](https://data.farzai.com/thailand-address/llms-full.txt).

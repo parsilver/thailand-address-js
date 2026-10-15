@@ -36,7 +36,9 @@ const [tax, setTax] = useState<AddressValue>(EMPTY)
 | `legend`, `disabled`, `id`, `className` | | |
 | `client` | shared | A `createThaiAddress()` client, for example to use another data host. |
 
-**Validation runs on submit only.** It listens to its form's `submit` event in the capture phase. An invalid address stops the submit, shows its messages, marks the fields `aria-invalid` and focuses the first one. This works for a plain form and for react-hook-form's `handleSubmit`. The messages mean the same as the Laravel rules `thai_province`, `thai_district`, `thai_subdistrict` and `thai_postal_code`.
+**Validation runs on submit only.** It listens to its form's `submit` event in the capture phase. An invalid address stops the submit, shows its messages, marks the fields `aria-invalid` and focuses the first one. This works for a plain form and for react-hook-form's `handleSubmit`. The messages mean the same as the Laravel rules `thai_province`, `thai_district`, `thai_subdistrict` and `thai_postal_code`. This check only helps the user. Anyone can post any codes, so **the server must still validate them**, for example with those rules.
+
+**Privacy:** the visitor's browser loads the dataset files from data.farzai.com, so that host sees the visitor's IP and the province chosen. The files are fetched without cookies or a Referer. To keep this on your own origin, self-host the snapshot and pass `client={createThaiAddress({ baseUrl })}`, then allow only that origin in your CSP `connect-src`.
 
 ## Develop
 

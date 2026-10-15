@@ -34,7 +34,12 @@ export function createLoader(baseUrl: string, snapshot: string, fetchFn: typeof 
     const url = `${baseUrl}/${snapshot}/${path}`
     let res: Response
     try {
-      res = await fetchFn(url, { headers: { accept: 'application/json' } })
+      res = await fetchFn(url, {
+        headers: { accept: 'application/json' },
+        // Public data: no cookies, and no Referer telling the host which page asked.
+        credentials: 'omit',
+        referrerPolicy: 'no-referrer',
+      })
     } catch (e) {
       throw new DatasetError('http', `could not fetch ${url}: ${(e as Error).message ?? e}`, url)
     }
