@@ -77,6 +77,8 @@ describe('preload', () => {
       'provinces.json',
       'subdistricts.json',
     ])
+  })
+})
 
 describe('hostile rows', () => {
   it('a null row in a file is skipped, not a TypeError', async () => {
