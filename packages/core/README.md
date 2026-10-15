@@ -54,12 +54,14 @@ The files are fetched from `https://data.farzai.com/thailand-address/v1/<snapsho
   - `found`, with a `shape`:
     - `single`: one subdistrict.
     - `one_district`: several subdistricts in one district, for example 10200.
-    - `several_districts`: the code spans districts or provinces, for example 13240.
+    - `several_districts`: the code spans districts or provinces, for example 13240. `province_count` and `district_count` say how many.
 - **`search(query, { limit?, includeFacility? })`:** matches Thai and English names.
   - Case, spaces and the prefixes ต./อ./จ./ตำบล/อำเภอ/จังหวัด/เขต/แขวง are ignored.
   - Digits match postal codes by prefix.
   - A search runs from 2 letters or 3 digits.
-  - There is one hit per postal code. Exact matches come before prefix matches, which come before substring matches. Within each group, subdistrict matches come before district matches, which come before province matches.
+  - Each hit has a `level`. A province or district name gives that province or district once (`level: 'province'` or `'district'`), not every subdistrict in it. A subdistrict gives one hit per postal code.
+  - Every word must match, and a hit scores by its weakest word. The whole query without spaces is tried too, so names typed as written ("bang rak", "Mueang Phuket") match exactly.
+  - Exact matches come before prefix matches, which come before substring matches. Within each group, subdistricts come before districts, which come before provinces.
   - Each hit carries the character ranges that matched, for highlighting.
 - **`validate({ province_code, district_code, subdistrict_code, postal_code })`:** checks the same things as the Laravel package's `thai_province`, `thai_district`, `thai_subdistrict` and `thai_postal_code` rules. Errors are `required`, `unknown` or `mismatch`.
 

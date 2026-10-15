@@ -69,25 +69,32 @@ export type PostalLookup =
        */
       shape: 'single' | 'one_district' | 'several_districts'
       areas: Area[]
-      provinceCount: number
-      districtCount: number
+      province_count: number
+      district_count: number
     }
 
-export type Level = 'subdistrict' | 'district' | 'province' | 'postal_code'
 export type Range = [start: number, end: number]
 export type NameRanges = { th?: Range; en?: Range }
 
-export type SearchHit = Area & {
-  /** One hit per postal code; null for a subdistrict with no known code. */
-  postal_code: string | null
-  match: {
-    /** The most specific level the query matched. */
-    level: Level
-    quality: 'exact' | 'prefix' | 'contains'
-    /** Where the query matched in each bare name, by language, for highlighting. */
-    ranges: { subdistrict?: NameRanges; district?: NameRanges; province?: NameRanges; postal_code?: Range }
-  }
+type Match = {
+  quality: 'exact' | 'prefix' | 'contains'
+  /** Where the query matched in each bare name, by language, for highlighting. */
+  ranges: { subdistrict?: NameRanges; district?: NameRanges; province?: NameRanges; postal_code?: Range }
 }
+
+/**
+ * One search result, at the level the query named. A province or district
+ * name gives that province or district once, not every subdistrict in it.
+ */
+export type SearchHit =
+  | (Area & {
+      level: 'subdistrict'
+      /** One hit per postal code; null for a subdistrict with no known code. */
+      postal_code: string | null
+      match: Match
+    })
+  | { level: 'district'; province: Province; district: District; match: Match }
+  | { level: 'province'; province: Province; match: Match }
 
 export type SearchResult =
   /** Fewer than 2 letters or 3 digits: no search ran. */

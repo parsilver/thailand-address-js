@@ -63,8 +63,9 @@ export function subdistrict(r: Row): Subdistrict {
 /** An active link with a known kind and coverage, or null. */
 export function postalOption(r: Row): (PostalOption & { subdistrict_code: string }) | null {
   const kind = oneOf(r['kind'], ['standard', 'facility'] as const)
-  const coverage = oneOf(r['coverage'], ['full', 'partial'] as const)
-  if (!isActive(r) || !kind || !coverage) return null
+  // An unknown coverage reads as partial: never assume a code covers a whole subdistrict.
+  const coverage = oneOf(r['coverage'], ['full', 'partial'] as const) ?? 'partial'
+  if (!isActive(r) || !kind) return null
   return {
     subdistrict_code: String(r['subdistrict_code'] ?? r['code']),
     postal_code: String(r['postal_code']),

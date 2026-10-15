@@ -193,7 +193,7 @@ export function createThaiAddress(options: ThaiAddressOptions = {}) {
     const districtCount = new Set(areas.map((a) => a.district.code)).size
     const provinceCount = new Set(areas.map((a) => a.province.code)).size
     const shape = areas.length === 1 ? 'single' : districtCount === 1 ? 'one_district' : 'several_districts'
-    return { status: 'found', postal_code, shape, areas, provinceCount, districtCount }
+    return { status: 'found', postal_code, shape, areas, province_count: provinceCount, district_count: districtCount }
   }
 
   function searchIndex(): Promise<SearchIndex> {
@@ -221,7 +221,7 @@ export function createThaiAddress(options: ThaiAddressOptions = {}) {
           postal.set(l.code, list)
         }
       }
-      return buildSearchIndex(areas, postal)
+      return buildSearchIndex(ps, [...dm.values()], areas, postal)
     })
     searchP.catch(() => (searchP = undefined))
     return searchP
