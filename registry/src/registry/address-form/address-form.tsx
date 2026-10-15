@@ -9,6 +9,7 @@ import {
   type District,
   type PostalLookup,
   type PostalOption,
+  type SearchHit,
   type Province,
   type Subdistrict,
   type ThaiAddress,
@@ -511,12 +512,27 @@ export function AddressForm({
     setPostalInput(pc)
   }
 
-  const onSearchPick = (a: Area, pc: string | null) => {
+  // A hit fills as many levels as it has: a province hit sets the province
+  // and leaves the rest to pick.
+  const onSearchPick = (hit: SearchHit, line: string) => {
     resetPostalContext()
     cancelLookup()
-    emit(codesOf(a, pc))
-    setPostalInput(pc ?? "")
-    setLive(t("liveFilled", { addr: formatAddress(a, locale, pc) }))
+    if (hit.level === "subdistrict") {
+      emit(codesOf(hit, hit.postal_code))
+      setPostalInput(hit.postal_code ?? "")
+      setLive(
+        t("liveFilled", { addr: formatAddress(hit, locale, hit.postal_code) })
+      )
+      return
+    }
+    emit({
+      province_code: hit.province.code,
+      district_code: hit.level === "district" ? hit.district.code : null,
+      subdistrict_code: null,
+      postal_code: null,
+    })
+    setPostalInput("")
+    setLive(t("liveFilled", { addr: line }))
   }
 
   // ---- Validation on submit -------------------------------------------------
@@ -1026,16 +1042,16 @@ function choiceDescription(
   result: Extract<PostalLookup, { status: "found" }>,
   t: (k: CopyKey, v?: Record<string, string | number>) => string
 ) {
-  return result.provinceCount > 1
+  return result.province_count > 1
     ? t("pickArea", {
         pc: result.postal_code,
         n: result.areas.length,
-        p: result.provinceCount,
+        p: result.province_count,
       })
     : t("pickAreaOneProvince", {
         pc: result.postal_code,
         n: result.areas.length,
-        d: result.districtCount,
+        d: result.district_count,
       })
 }
 

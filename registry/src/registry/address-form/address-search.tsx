@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import {
-  type Area,
   type Locale,
   type NameRanges,
   type SearchHit,
@@ -25,7 +24,7 @@ type AddressSearchProps = {
   t: Translate
   showFacilityCodes: boolean
   disabled: boolean
-  onPick: (area: Area, postalCode: string | null) => void
+  onPick: (hit: SearchHit, line: string) => void
   onFillManually: () => void
 }
 
@@ -78,8 +77,9 @@ export function AddressSearch({
   const optionId = (i: number) => `${id}-option-${i}`
 
   const choose = (hit: SearchHit) => {
-    onPick(hit, hit.postal_code)
-    setQuery(lineText(hit, locale))
+    const line = lineText(hit, locale)
+    onPick(hit, line)
+    setQuery(line)
     setOpen(false)
     setActiveIndex(-1)
   }
@@ -161,7 +161,7 @@ export function AddressSearch({
           >
             {hits.map((h, i) => (
               <li
-                key={`${h.subdistrict.code}-${h.postal_code}`}
+                key={hitKey(h)}
                 id={optionId(i)}
                 role="option"
                 aria-selected={i === activeIndex}
@@ -177,7 +177,7 @@ export function AddressSearch({
                 <span className="min-w-0">
                   <HitLine hit={h} locale={locale} />
                 </span>
-                {h.postal_code ? (
+                {h.level === "subdistrict" && h.postal_code ? (
                   <span className="shrink-0 text-muted-foreground tabular-nums">
                     {h.postal_code}
                   </span>
@@ -217,6 +217,13 @@ export function AddressSearch({
   )
 }
 
+const hitKey = (h: SearchHit) =>
+  h.level === "subdistrict"
+    ? `${h.subdistrict.code}-${h.postal_code}`
+    : h.level === "district"
+      ? h.district.code
+      : h.province.code
+
 function lineText(hit: SearchHit, locale: Locale): string {
   return parts(hit, locale)
     .map((p) => p.prefix + p.name + p.suffix)
@@ -231,7 +238,10 @@ type Part = {
   range: [number, number] | undefined
 }
 
-/** The one-line address as prefix + name pieces, so the matched part of each name can be bold. */
+/**
+ * The one-line address as prefix + name pieces, so the matched part of each
+ * name can be bold. A district or province hit has only its own levels.
+ */
 function parts(hit: SearchHit, locale: Locale): Part[] {
   const r = hit.match.ranges
   // A match in the other language bolds the whole name: "karon" bolds กะรน.
@@ -245,32 +255,39 @@ function parts(hit: SearchHit, locale: Locale): Part[] {
       own ?? (ranges?.th || ranges?.en ? [0, name.length] : undefined)
     return { name, range }
   }
-  const s = pick(hit.subdistrict.name, r.subdistrict)
-  const d = pick(hit.district.name, r.district)
-  const p = pick(hit.province.name, r.province)
-  if (locale === "en") {
-    return [
-      { level: "subdistrict", prefix: "", ...s, suffix: ", " },
-      { level: "district", prefix: "", ...d, suffix: ", " },
-      { level: "province", prefix: "", ...p, suffix: "" },
-    ]
-  }
   const bangkok = hit.province.kind === "special_administrative_area"
-  return [
-    {
+  const out: Omit<Part, "suffix">[] = []
+  if (hit.level === "subdistrict") {
+    out.push({
       level: "subdistrict",
-      prefix: hit.subdistrict.kind === "khwaeng" || bangkok ? "แขวง" : "ตำบล",
-      ...s,
-      suffix: " ",
-    },
-    {
+      prefix:
+        locale === "en"
+          ? ""
+          : hit.subdistrict.kind === "khwaeng" || bangkok
+            ? "แขวง"
+            : "ตำบล",
+      ...pick(hit.subdistrict.name, r.subdistrict),
+    })
+  }
+  if (hit.level !== "province") {
+    out.push({
       level: "district",
-      prefix: hit.district.kind === "khet" || bangkok ? "เขต" : "อำเภอ",
-      ...d,
-      suffix: " ",
-    },
-    { level: "province", prefix: bangkok ? "" : "จังหวัด", ...p, suffix: "" },
-  ]
+      prefix:
+        locale === "en"
+          ? ""
+          : hit.district.kind === "khet" || bangkok
+            ? "เขต"
+            : "อำเภอ",
+      ...pick(hit.district.name, r.district),
+    })
+  }
+  out.push({
+    level: "province",
+    prefix: locale === "en" || bangkok ? "" : "จังหวัด",
+    ...pick(hit.province.name, r.province),
+  })
+  const sep = locale === "en" ? ", " : " "
+  return out.map((p, i) => ({ ...p, suffix: i < out.length - 1 ? sep : "" }))
 }
 
 function HitLine({ hit, locale }: { hit: SearchHit; locale: Locale }) {
