@@ -61,6 +61,9 @@ describe('loading', () => {
   it('refuses a snapshot id that is not a snapshot id', () => {
     expect(() => client({}, { snapshot: 'latest' })).toThrow(/snapshot/)
     expect(() => client({}, { snapshot: '../2026-10-15' })).toThrow(/snapshot/)
+    expect(() => client({}, { snapshot: '2026-10-15.0' })).toThrow(/snapshot/)
+    expect(() => client({}, { snapshot: '2026-10-15.01' })).toThrow(/snapshot/)
+    expect(() => client({ status: () => 404 }, { snapshot: '2026-10-15.1' })).not.toThrow()
   })
 })
 
