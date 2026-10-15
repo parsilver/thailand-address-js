@@ -1,7 +1,7 @@
 import { DatasetError } from './errors'
 import { SCHEMA_MAJOR } from './snapshot'
 
-const SNAPSHOT_ID = /^\d{4}-\d{2}-\d{2}(\.\d+)?$/
+const SNAPSHOT_ID = /^\d{4}-\d{2}-\d{2}(\.[1-9]\d*)?$/
 
 export type Loader = {
   /** The envelope's `data`, once per path; a failure is not cached. */

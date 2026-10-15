@@ -32,8 +32,8 @@ describe('lookupPostalCode', () => {
     if (r.status !== 'found') throw new Error(r.status)
     expect(r.shape).toBe('several_districts')
     expect(r.areas.map((a) => a.subdistrict.code)).toEqual(['141601', '141602', '141603', '141604', '141605', '160104'])
-    expect(r.provinceCount).toBe(2)
-    expect(r.districtCount).toBe(2)
+    expect(r.province_count).toBe(2)
+    expect(r.district_count).toBe(2)
   })
 
   it('10001: a facility code is hidden by default, with its name from the dataset note', async () => {
@@ -119,6 +119,18 @@ describe('postalCodesOf', () => {
       ['10500', 'partial'],
       ['10501', 'partial'],
     ])
+  })
+
+  it('an unknown coverage value reads as partial, never dropped and never assumed full', async () => {
+    const { ta } = client({
+      mutate: (path, body) => {
+        if (path === 'by-province/83.json') {
+          for (const l of body.data.postal_codes) if (l.subdistrict_code === '830108') l.coverage = 'village'
+        }
+        return body
+      },
+    })
+    expect(await ta.postalCodesOf('830108')).toEqual([{ postal_code: '83100', kind: 'standard', coverage: 'partial', note: null }])
   })
 
   it('hides facility codes unless asked', async () => {
