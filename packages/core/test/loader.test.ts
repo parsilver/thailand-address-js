@@ -63,3 +63,19 @@ describe('loading', () => {
     expect(() => client({}, { snapshot: '../2026-10-15' })).toThrow(/snapshot/)
   })
 })
+
+describe('hostile rows', () => {
+  it('a null row in a file is skipped, not a TypeError', async () => {
+    const { ta } = client({
+      mutate: (path, body) => {
+        if (path === 'index/postal_codes.json') body.data.unshift(null, 7, 'x')
+        if (path === 'by-province/83.json') {
+          body.data.subdistricts.unshift(null)
+          body.data.postal_codes.unshift(null)
+        }
+        return body
+      },
+    })
+    expect((await ta.lookupPostalCode('83100')).status).toBe('found')
+  })
+})
